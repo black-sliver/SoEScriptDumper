@@ -1290,7 +1290,8 @@ std::string LootData::to_flag() const {
     if (prizeit != prizes.end()) {
         strncpy(sitem, prizeit->second, sizeof(sitem));
         sitem[sizeof(sitem)-1] = 0;
-        *strchrnul(sitem, '(') = 0;
+        char* p = strchr(sitem, '(');
+        if (p) *p = 0;
     }
     
     snprintf(buf, sizeof(buf), "{{0x%04x, bm2bp(0x%02x)}, \"Sniffed %sin %s (#%u)\"},",
@@ -1892,8 +1893,8 @@ std::string buf_parse_sub(const uint8_t* buf, uint32_t& addr, size_t len, bool* 
 
 void printwrite(const char* spaces, unsigned instroff, uint8_t instr, uint16_t ramaddr, uint16_t val, const char* hex="") // this is loRAM only
 {
-    const char* addrname = NULL;
-    const char* valname = NULL;
+    const char* addrname = nullptr;
+    const char* valname = nullptr;
 
     auto ramit = ram.find(ramaddr);
     if (ramit != ram.end()) addrname = ramit->second;
@@ -1918,7 +1919,7 @@ void printwrite(const char* spaces, unsigned instroff, uint8_t instr, uint16_t r
 }
 void printwrite(const char* spaces, unsigned instroff, uint8_t instr, uint16_t ramaddr, const char* val, const char* hex="") // this is loRAM only
 {
-    const char* addrname = NULL;
+    const char* addrname = nullptr;
     auto ramit = ram.find(ramaddr);
     if (ramit != ram.end()) addrname = ramit->second;
 
@@ -3230,7 +3231,7 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
                 std::string target;
                 do {
                     target = ok?parse_sub(scriptaddr,&ok):"?";
-                    char* end = NULL;
+                    char* end = nullptr;
                     long tmp = strtol(target.c_str(), &end, 0);
                     if (tmp==0 && *end==0) break; // zero = end of list
                     if (!targets.empty() && !target.empty()) targets += ", ";
@@ -3283,7 +3284,7 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
                 for (const auto& s:globalscripts) if (s.first == type) { exists=true; break; }
                 if (!exists) globalscripts.push_back(std::make_pair(type, "Unnamed Global script"));
 #endif
-                const char* scriptname = globalscript2name(type, NULL);
+                const char* scriptname = globalscript2name(type, nullptr);
                 if (scriptname) {
                     printf("%s[" ADDRFMT "] (%02x) CALL \"%s\" (0x%02x)%s\n",
                            spaces, ADDR, instr, scriptname, (unsigned)type, HD());
@@ -3640,7 +3641,7 @@ int main(int argc, char** argv)
     uint8_t* buf = (uint8_t*)malloc(len);
     if (!buf) die("Out of memory!\n");
     if (fread(buf, 1, len, f) != len) die("Could not read input file!\n");
-    fclose(f); f = NULL;
+    fclose(f); f = nullptr;
     
     bool skip_scriptless = true; // TODO parse command line args, NOT --all
     (void)skip_scriptless; // remove warning, usage of this flag depends on defines
@@ -3992,7 +3993,7 @@ for (auto a: {0xb1e000,0x95c50d,0x95cfaa,0x95cb9a,0x9895c8,0x97cdc3}) {
 #endif
 #endif
 
-    free(buf); buf = NULL;
+    free(buf); buf = nullptr;
     printf(END);
     
 #if (defined(WIN32) || defined(_WIN32)) && !defined(main)
