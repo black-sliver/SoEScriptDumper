@@ -1628,7 +1628,7 @@ std::string u16addr2str(uint16_t n)
     snprintf(buf, sizeof(buf), "$%04x", n);
     return buf;
 }
-std::string u8val2str(uint16_t n)
+std::string u8val2str(uint8_t n)
 {
     char buf[5];
     snprintf(buf, sizeof(buf), "0x%02x", n);
