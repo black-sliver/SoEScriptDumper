@@ -149,15 +149,16 @@ bool absAddr = false;
 #define ADDRFMT "+x%02x"
 #endif
 
-void die(const char* msg)
+#ifndef die
+static void die(const char* msg)
 {
     fprintf(stderr, "%s", msg);
-#if defined(WIN32) || defined(_WIN32)
+#if (defined(WIN32) || defined(_WIN32)) && !defined(main)
     system("pause");
 #endif
     exit(1);
 }
-
+#endif
 
 // some constants for rom adresses
 #define MAP_LIST 0x9ffde7
