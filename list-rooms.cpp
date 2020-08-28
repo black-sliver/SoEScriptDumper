@@ -99,8 +99,13 @@ or add points of interest by hand to ..scripts lists.
 #elif defined HTML4
 #define START "<font color=\"#000\">"
 #define HEADING "</font><font color=\"#770\">"
-#define HEADING_TEXT "</font><font color=\"#770\"><b>" // bold is missing here
+#ifdef NO_BOLD
+#define HEADING_TEXT
+#define HEADING_END
+#else
+#define HEADING_TEXT "</font><font color=\"#770\"><b>"
 #define HEADING_END "</b>" HEADING
+#endif
 #define GREEN "</font><font color=\"#0f0\">"
 #define RED "</font><font color=\"#f00\">"
 #define UNTRACED "</font><font color=\"#707\">"
