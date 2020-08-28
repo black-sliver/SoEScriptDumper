@@ -3637,14 +3637,21 @@ int main(int argc, char** argv)
         fprintf(stderr, "Usage: %s <rom file>\n", argv[0]);
         return 1;
     }
-    
+
+    uint8_t* buf = NULL;
     FILE* f = fopen(argv[1], "rb");
     if (!f) die("Could not open input file!\n");
     fseek(f, 0L, SEEK_END);
     size_t len = ftell(f);
-    if (len != 3145728 && len!=4194304) die("ROM has to be exactly 3MB or grown to 4MB (headerless)!\n");
-    fseek(f, 0L, SEEK_SET);
-    uint8_t* buf = (uint8_t*)malloc(len);
+    if (len == 3145728+512 || len == 4194304+512) {
+        fseek(f, 512L, SEEK_SET);
+        len -= 512;
+    } else if (len == 3145728 || len == 4194304) {
+        fseek(f, 0L, SEEK_SET);
+    } else {
+        die("ROM has to be 3MB or grown to 4MB (with or without header)!\n");
+    }
+    buf = (uint8_t*)malloc(len);
     if (!buf) die("Out of memory!\n");
     if (fread(buf, 1, len, f) != len) die("Could not read input file!\n");
     fclose(f); f = nullptr;
