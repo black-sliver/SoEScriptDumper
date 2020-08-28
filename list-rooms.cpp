@@ -1843,12 +1843,12 @@ std::string buf_parse_sub(const uint8_t* buf, uint32_t& addr, size_t len, bool* 
                 exprlen++;
                 res += "(player==dog)";
                 break;
-            case 0x58: // game timer bits 0-15
+            case 0x58: // game timer bits 0-15 ($7e0b19..7e0b1a)
                 if (!res.empty()) res += " ";
-                exprlen++;
-                res += "GameTimer[:16]";
+                exprlen+=2;
+                res += "GameTimer&0xffff";
                 break;
-            case 0x59: // bits 16-32
+            case 0x59: // bits 16-32 ($7e0b1b..7e0b1c)
                 if (!res.empty()) res += " ";
                 exprlen+=2;
                 res += "GameTimer>>16";
