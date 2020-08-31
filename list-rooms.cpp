@@ -2374,7 +2374,7 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
                                 (addrmode==3) ? scriptstart+instroff+3 : // 1B sub-instr
                                 (addrmode==4) ? scriptstart+instroff+3 : // 2B sub-instr
                                 (addrmode==5) ? scriptstart+instroff+3 : // 3B sub-instr
-                                0;
+                                                scriptstart+instroff; // for error reporting
                 IntType _inttype = 
                                 (addrmode==1) ? IntType::byte :
                                 (addrmode==2) ? IntType::word :
@@ -3951,7 +3951,8 @@ for (auto a: {0xb1e000,0x95c50d,0x95cfaa,0x95cb9a,0x9895c8,0x97cdc3}) {
 #ifdef DUMP_DOGGO_CHANGE
     {
         FILE* f = fopen("doggo.h", "wb");
-        fprintf(f, "//TODO: we should also swap animations based on what doggo we have\n");
+        fprintf(f, "//TODO:  we should also swap animations based on what doggo we have\n");
+        fprintf(f, "//FIXME: $2363 is used to dynamically load doggo, but rarely used\n");
         fprintf(f, "enum doggo_consts { DOGGO_ACT0=0xba, DOGGO_ACT1=0xb2, DOGGO_ACT2=0xb6,\n"
                    "                    DOGGO_ACT3=0xb8, DOGGO_ACT4=0xbc, DOGGO_BONE=0xb4 };\n");
         fprintf(f, "static const uint8_t doggo_vals[] = {\n"
@@ -3961,7 +3962,12 @@ for (auto a: {0xb1e000,0x95c50d,0x95cfaa,0x95cb9a,0x9895c8,0x97cdc3}) {
         fprintf(f, "static const struct doggo doggos[] = {");
         size_t n=0;
         for (const auto& pair: change_doggo) {
-            assert(pair.second.inttype == IntType::subinstr1B);
+            //assert(pair.second.inttype == IntType::subinstr1B);
+            if (pair.second.inttype != IntType::subinstr1B) {
+                fprintf(stderr, "WARN: unsupported change doggo at $%06x!\n",
+                        pair.first);
+                continue;
+            }
             if (pair.second.val == 0x04) continue; // exclude bone cutscene doggo
             uint8_t byteval = pair.second.val<0x10 ?
                 (pair.second.val+0xb0):(pair.second.val-0x10+0xe0);
