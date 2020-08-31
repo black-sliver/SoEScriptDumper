@@ -1697,7 +1697,7 @@ std::string buf_parse_sub(const uint8_t* buf, uint32_t& addr, size_t len, bool* 
             {
                 uint16_t baseaddr = (instr>=0x0a) ? 0x2834 : 0x2258;
                 uint8_t a = read16(addr)>>3;
-                uint8_t b = read16(addr)&0x0f;
+                uint8_t b = read16(addr)&0x07;
                 addr+=2;
                 res += u16addr2str(baseaddr+a) + "&" + u8val2str(1<<b); // TODO: named bits
                 exprlen=2;
@@ -1728,7 +1728,7 @@ std::string buf_parse_sub(const uint8_t* buf, uint32_t& addr, size_t len, bool* 
             case 0x0f: // script arg bit, like 05 and 08 but addr is only 8bit
             {
                 uint8_t a = read8(addr)>>3;
-                uint8_t b = read8(addr++)&0x0f;
+                uint8_t b = read8(addr++)&0x07;
                 if (!res.empty()) res += " ";
                 res += "arg" + std::to_string(a) + "&" + u8val2str(1<<b);
                 exprlen=2;
