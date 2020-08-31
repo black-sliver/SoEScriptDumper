@@ -20,6 +20,7 @@ or add points of interest by hand to ..scripts lists.
 //TODO: inline (unique) 24bit CALLS?
 //TODO: trace sub-instr 00 to be sure what it would do
 //TODO: remove duplicate (partial) scripts from absscripts
+//TODO: don't print absscripts if already inlined
 //TODO: differentiate between parallel "CALLS" and actual CALLS
 
 #include <stdio.h>
@@ -511,6 +512,11 @@ std::list< std::pair<uint32_t, const char*> > absscripts = {
     {0x92db70, "Unknown world map? #8"},
     {0x92db75, "WW landing (found w/ breakpoint)"},
     {0x968416, "Fish guy cure formula"},
+    {0x959de0, "Open Tiny's gate (3 switches)"},
+    {0x99efce, "Verm spell cast"},
+    {0x9b814e, "Generate act4 numeric codes"},
+    {0x95c0c4, "Shop 10,000 jewel Amulet from Monk"},
+    {0x95c0b3, "Unload 10,000 jewel Amulet Monk"},
 };
 static
 #ifndef AUTO_DISCOVER_SCRIPTS
@@ -682,6 +688,8 @@ std::list< std::pair<uint8_t, const char*> > globalscripts = {
     {0x4e, "Actual save dialog"},
     {0x4f, "Actual saving"},
     {0x54, "Buy ingredients dialog"},
+    {0x59, "Attraction mode, after Thraxx"},
+    {0x5a, "Credits"},
     {0xff, "Salabog dead??"},
 };
 
