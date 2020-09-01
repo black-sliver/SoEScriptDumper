@@ -2767,8 +2767,8 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
                 printf("%s[" ADDRFMT "] (%02x) CLEAR TEXT%s\n",
                     spaces, ADDR, instr, HD());
                 break;
-            case 0x58:
-                printf("%s[" ADDRFMT "] " UNTRACED "(%02x) UNTRACED INSTR, untraced" NORMAL "%s\n",
+            case 0x58: // fade-in volume according to darkmoon
+                printf("%s[" ADDRFMT "] (%02x) FADE IN VOLUME%s\n",
                     spaces, ADDR, instr, HD());
                 break;
             case 0x59: // fade-out volume according to darkmoon
