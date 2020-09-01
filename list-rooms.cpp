@@ -657,8 +657,8 @@ static
 const
 #endif
 std::list< std::pair<uint8_t, const char*> > globalscripts = {
-    {0x00, "Unknown house-keeping; stop music?"},
-    {0x01, "Unknown house-keeping; start music?"},
+    {0x00, "Fade-out / stop music"},
+    {0x01, "Fade-in / start music"},
     {0x02, "Open message box?"},
     {0x07, "Open message box?"},
     {0x0a, "Open message box?"},
