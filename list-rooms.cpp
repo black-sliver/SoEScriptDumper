@@ -3813,7 +3813,7 @@ int main(int argc, char** argv)
     size_t absscriptsprinted=0;
 
     do {
-            printf(HEADING_TEXT "Known NPC and Short scripts" HEADING_END NORMAL "\n");
+            printf(HEADING HEADING_TEXT "Known NPC and Short scripts" HEADING_END NORMAL "\n");
             size_t n=0; // TODO: use vectors instead of lists?
             for (auto& pair: npcscripts) {
                  n++;
@@ -3825,7 +3825,7 @@ int main(int argc, char** argv)
             }
             printf("\n");
 
-            printf(HEADING_TEXT "Known global scripts" HEADING_END NORMAL "\n");
+            printf(HEADING HEADING_TEXT "Known global scripts" HEADING_END NORMAL "\n");
             n = 0;
             for (auto& pair: globalscripts) {
                  n++;
@@ -3837,7 +3837,7 @@ int main(int argc, char** argv)
             }
             printf("\n");
 
-            printf(HEADING_TEXT "Known abs scripts" HEADING_END NORMAL "\n");
+            printf(HEADING HEADING_TEXT "Known abs scripts" HEADING_END NORMAL "\n");
             n = 0;
             for (auto& pair: absscripts) {
                  n++;
