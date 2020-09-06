@@ -1688,7 +1688,7 @@ std::string u24val2str(uint32_t n)
     return buf;
 }
 
-std::string buf_parse_sub(const uint8_t* buf, uint32_t& addr, size_t len, bool* pok=nullptr)
+std::string buf_parse_sub(const uint8_t* buf, uint32_t& addr, size_t len, bool* pok=nullptr, int* pexprlen=nullptr)
 {
     bool ok = true;
     bool done = false;
@@ -1932,11 +1932,12 @@ std::string buf_parse_sub(const uint8_t* buf, uint32_t& addr, size_t len, bool* 
     } while (ok && !done);
 
     if (pok) *pok = ok;
+    if (pexprlen) *pexprlen = exprlen;
     if (ok && !stack.empty()) fprintf(stderr, "WARN: sub-instr stack not empty!\n"); // sadly this is actually used by the devs :S
     else if (!ok) stack = std::stack< std::pair<int,std::string> >();
     return res;
 }
-#define parse_sub(addrRef, okPtr) buf_parse_sub(buf, addrRef, len, okPtr)
+#define parse_sub(addrRef, ...) buf_parse_sub(buf, addrRef, len, __VA_ARGS__)
 
 void printwrite(const char* spaces, unsigned instroff, uint8_t instr, uint16_t ramaddr, uint16_t val, const char* hex="") // this is loRAM only
 {
@@ -2236,17 +2237,18 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
                 } else {
                     scriptaddr--;
                     bool ok = true;
-                    std::string expr = parse_sub(scriptaddr,&ok);
+                    int exprlen = 0;
+                    std::string expr = parse_sub(scriptaddr,&ok,&exprlen);
                     if (ok) {
                         int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
                         signed dst = (signed)scriptaddr-scriptstart+jmp;
-                        printf("%s[" ADDRFMT "] (%02x) IF %s%s THEN SKIP %d (to +x%02x)%s\n",
-                               spaces, ADDR, instr, expr.c_str(), instr==0x08?"":" == FALSE", jmp, DST, HD());
+                        printf("%s[" ADDRFMT "] (%02x) IF %s%s%s%s THEN SKIP %d (to +x%02x)%s\n",
+                               spaces, ADDR, instr, (instr==0x08||exprlen<2)?"": "(", expr.c_str(), (instr==0x08||exprlen<2)?"": ")", instr==0x08?"":" == FALSE", jmp, DST, HD());
                         offs.push_back(dst);
                         if (dst>maxoff) maxoff = dst;
                     } else {
-                        printf("%s[" ADDRFMT "] " RED "(%02x) IF %s = %s THEN SKIP ...?" NORMAL "%s\n",
-                               spaces, ADDR, instr, expr.c_str(), instr==0x08?"":" == FALSE", HDE());
+                        printf("%s[" ADDRFMT "] " RED "(%02x) IF %s%s%s%s THEN SKIP ...?" NORMAL "%s\n",
+                               spaces, ADDR, instr, (instr==0x08||exprlen<2)?"": "(", expr.c_str(), (instr==0x08||exprlen<2)?"": ")", instr==0x08?"":" == FALSE", HDE());
                         NEXT_INSTR();
                     }
                 }
