@@ -98,7 +98,7 @@ or add points of interest by hand to ..scripts lists.
 #define LE "<="
 #define GE ">="
 #elif defined HTML4
-#define START "<font color=\"#000\">"
+#define START "<font>"// color=\"#000\">"
 #define HEADING "</font><font color=\"#770\">"
 #ifdef NO_BOLD
 #define HEADING_TEXT
@@ -110,7 +110,7 @@ or add points of interest by hand to ..scripts lists.
 #define GREEN "</font><font color=\"#0f0\">"
 #define RED "</font><font color=\"#f00\">"
 #define UNTRACED "</font><font color=\"#707\">"
-#define NORMAL "</font><font color=\"#000\">"
+#define NORMAL "</font><font>"// color=\"#000\">"
 #define END "</font>"
 #define LT "&lt;"
 #define GT "&gt;"
