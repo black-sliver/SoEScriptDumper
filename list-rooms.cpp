@@ -1348,7 +1348,10 @@ std::string LootData::to_h() const {
 
 
 
-
+static inline bool addr_valid(uint32_t addr, size_t len)
+{
+    return ((addr&~(0xc00000)) < len);
+}
 static uint8_t read_buf8(const uint8_t* buf, uint32_t addr, size_t len)
 {
     addr &= ~(0xc00000);
@@ -1387,6 +1390,7 @@ static uint32_t read_buf24(const uint8_t* buf, uint32_t addr, size_t len)
     return res;
 }
 
+#define addr_valid(addr) addr_valid(addr, len)
 #define read8(addr)  read_buf8 (buf, addr, len)
 #define read16(addr) read_buf16(buf, addr, len)
 #define read24(addr) read_buf24(buf, addr, len)
@@ -3795,12 +3799,15 @@ int main(int argc, char** argv)
         }
         // step-on-trigger-scripts
         uint32_t mscriptlistptr = dataptr+0x0d+2;
+        if (!addr_valid(mscriptlistptr)) die("Unsupported ROM");
         uint16_t mscriptlistlen = read16(dataptr+0x0d);
         // b-trigger-scripts
         uint32_t bscriptlistptr = dataptr+0x0d+2+mscriptlistlen+2;
+        if (!addr_valid(bscriptlistptr)) die("Unsupported ROM");
         uint16_t bscriptlistlen = read16(dataptr+0x0d+2+mscriptlistlen);
         // enter script
         uint32_t escriptptr  = 0x92801b + 5UL * pair.first;
+        if (!addr_valid(escriptptr)) die("Unsupported ROM");
         uint32_t escriptaddr = script2romaddr(read24(escriptptr));
         
         total_rooms++;
