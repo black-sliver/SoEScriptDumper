@@ -4101,7 +4101,10 @@ for (auto a: {0xb1e000,0x95c50d,0x95cfaa,0x95cb9a,0x9895c8,0x97cdc3}) {
     free(buf); buf = nullptr;
     printf(END);
     
-#ifdef AUTO_DISCOVER_SCRIPTS
+#ifdef main
+    // NOTE: we would have to remove all references in of items in strings
+    //       before we can clear it out, so we just leak the memory
+#else
     for (auto s: strings) free(s);
     strings.clear();
 #endif
