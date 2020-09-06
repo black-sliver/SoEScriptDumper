@@ -164,6 +164,11 @@ static void die(const char* msg)
 // some constants for rom adresses
 #define MAP_LIST 0x9ffde7
 
+#ifdef AUTO_DISCOVER_SCRIPTS
+static std::list<char*> strings; // buffer for generated strings
+// NOTE: unique_ptr syntax is too ugly for me to handle
+#endif
+
 // NOTE: we use a list to have ordering we want
 static 
 #ifndef INCLUDE_UNKNOWN_MAPS
@@ -1676,6 +1681,12 @@ std::string u16val2str(uint16_t n)
     snprintf(buf, sizeof(buf), "0x%04x", n);
     return buf;
 }
+std::string u24val2str(uint32_t n)
+{
+    char buf[11];
+    snprintf(buf, sizeof(buf), "0x%06x", n);
+    return buf;
+}
 
 std::string buf_parse_sub(const uint8_t* buf, uint32_t& addr, size_t len, bool* pok=nullptr)
 {
@@ -2117,7 +2128,10 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
                 // TODO: generate some unique name
                 bool exists = false;
                 for (const auto& s:absscripts) if (s.first == addr) { exists=true; break; }
-                if (!exists) absscripts.push_back(std::make_pair(addr, "Unnamed ABS script"));
+                if (!exists) {
+                    strings.push_back(strdup(("Unnamed ABS script " + u24val2str(addr)).c_str()));
+                    absscripts.push_back(std::make_pair(addr, strings.back()));
+                }
 #endif
                 printf("%s[" ADDRFMT "] (%02x) CALL 0x%06x %s%s\n",
                     spaces, ADDR, instr, addr, absscript2name(addr), HD());
@@ -2486,7 +2500,10 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
                 // TODO: generate some unique name
                 bool exists = false;
                 for (const auto& s:absscripts) if (s.first == addr) { exists=true; break; }
-                if (!exists) absscripts.push_back(std::make_pair(addr, "Unnamed ABS script"));
+                if (!exists) {
+                    strings.push_back(strdup(("Unnamed ABS script " + u24val2str(addr)).c_str()));
+                    absscripts.push_back(std::make_pair(addr, strings.back()));
+                }
 #endif
                 printf("%s[" ADDRFMT "] (%02x) CALL 0x%06x %s%s\n",
                     spaces, ADDR, instr, addr, absscript2name(addr), HD());
@@ -2602,7 +2619,10 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
 #ifdef AUTO_DISCOVER_SCRIPTS
                     bool exists = false;
                     for (const auto& s:npcscripts) if (s.first == val16) { exists=true; break; }
-                    if (!exists) npcscripts.push_back(std::make_pair(val16, "Unnamed NPC talk script"));
+                    if (!exists) {
+                        strings.push_back(strdup(("Unnamed NPC talk script " + u16val2str(val16)).c_str()));
+                        npcscripts.push_back(std::make_pair(val16, strings.back()));
+                    }
 #endif
                     printf("%s[" ADDRFMT "] (%02x) WRITE %s+x66=0x%02x, %s+x68=0x0040 (talk script): %s%s\n",
                         spaces, ADDR, instr, entity.c_str(), val16, entity.c_str(), npcscript2name(val16), HD());
@@ -2624,7 +2644,10 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
                     // TODO: see what type actually means and name script accordingly
                     bool exists = false;
                     for (const auto& s:npcscripts) if (s.first == val16) { exists=true; break; }
-                    if (!exists) npcscripts.push_back(std::make_pair(val16, "Unnamed Short script"));
+                    if (!exists) {
+                        strings.push_back(strdup(("Unnamed Short script " + u16val2str(val16)).c_str()));
+                        npcscripts.push_back(std::make_pair(val16, strings.back()));
+                    }
 #endif
                     printf("%s[" ADDRFMT "] (%02x) WRITE $0ea2+%x=0x%02x, $0eac+%x=0x%02x (unknown): %s?%s\n",
                         spaces, ADDR, instr,
@@ -2640,10 +2663,14 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
 #ifdef AUTO_DISCOVER_SCRIPTS
                         bool exists = false;
                         for (const auto& s:npcscripts) if (s.first == val16) { exists=true; break; }
-                        if (!exists) npcscripts.push_back(std::make_pair(val16, (val1==0x040)?"Unnamed NPC Talk script":
-                                                                                (val1==0x100)?"Unnamed NPC Damage script":
-                                                                                (val1==0x200)?"Unnamed NPC Kill script":
-                                                                                              "Unnamed NPC script"));
+                        if (!exists) {
+                            strings.push_back(strdup((
+                                                  ( (val1==0x040)?"Unnamed NPC Talk script":
+                                                    (val1==0x100)?"Unnamed NPC Damage script":
+                                                    (val1==0x200)?"Unnamed NPC Kill script" : "Unnamed NPC script"
+                                                  ) + u16val2str(val16)).c_str()));
+                            npcscripts.push_back(std::make_pair(val16, strings.back()));
+                        }
 #endif
                         printf("%s[" ADDRFMT "] (%02x) WRITE %s+x68=0x%02x, %s+x66=0x%02x (set script): %s%s\n",
                             spaces, ADDR, instr, entity.c_str(), val1, entity.c_str(), val2, npcscript2name(val2), HD());
@@ -3318,7 +3345,10 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
 #ifdef AUTO_DISCOVER_SCRIPTS
                 bool exists = false;
                 for (const auto& s:globalscripts) if (s.first == type) { exists=true; break; }
-                if (!exists) globalscripts.push_back(std::make_pair(type, "Unnamed Global script"));
+                if (!exists) {
+                    strings.push_back(strdup(("Unnamed Global script " + u8val2str(type)).c_str()));
+                    globalscripts.push_back(std::make_pair(type, strings.back()));
+                }
 #endif
                 const char* scriptname = globalscript2name(type, nullptr);
                 if (scriptname) {
@@ -3340,7 +3370,10 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
 #ifdef AUTO_DISCOVER_SCRIPTS
                 bool exists = false;
                 for (const auto& s:npcscripts) if (s.first == val16) { exists=true; break; }
-                if (!exists) npcscripts.push_back(std::make_pair(val16, "Unnamed Short script"));
+                if (!exists) {
+                    strings.push_back(strdup(("Unnamed Short script " + u16val2str(val16)).c_str()));
+                    npcscripts.push_back(std::make_pair(val16, strings.back()));
+                }
 #endif
                 //uint32_t mapscriptptr = 0x928000 + read16(0x928000);
                 printf("%s[" ADDRFMT "] (%02x) CALL 0x%04x -" GT " 0x%06x%s\n",
@@ -3358,7 +3391,10 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
 #if defined AUTO_DISCOVER_SCRIPTS && !defined INLINE_RCALLS
                 bool exists = false;
                 for (const auto& s:absscripts) if (s.first == addr) { exists=true; break; }
-                if (!exists) absscripts.push_back(std::make_pair(addr, "Unnamed ABS script")); // TODO: better naming
+                if (!exists) {
+                    strings.push_back(strdup(("Unnamed ABS script " + u24val2str(addr)).c_str()));
+                    absscripts.push_back(std::make_pair(addr, strings.back()));
+                }
 #endif
                 printf("%s[" ADDRFMT "] (%02x) RCALL %d (to 0x%06x): %s%s\n",
                     spaces, ADDR, instr, off, dst, absscript2name(dst), HD());
@@ -3378,7 +3414,10 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
 #if defined AUTO_DISCOVER_SCRIPTS && !defined INLINE_RCALLS
                 bool exists = false;
                 for (const auto& s:absscripts) if (s.first == addr) { exists=true; break; }
-                if (!exists) absscripts.push_back(std::make_pair(addr, "Unnamed ABS script")); // TODO: better naming
+                if (!exists) {
+                    strings.push_back(strdup(("Unnamed ABS script " + u24val2str(addr)).c_str()));
+                    absscripts.push_back(std::make_pair(addr, strings.back()));
+                }
 #endif
                 printf("%s[" ADDRFMT "] (%02x) RCALL %4d (to 0x%06x): %s%s\n",
                     spaces, ADDR, instr, off, dst, absscript2name(dst), HD());
@@ -3463,7 +3502,10 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
 #ifdef AUTO_DISCOVER_SCRIPTS
                         bool exists = false;
                         for (const auto& s:globalscripts) if (s.first == index) { exists=true; break; }
-                        if (!exists) globalscripts.push_back(std::make_pair((uint8_t)index, "Unnamed Global script"));
+                        if (!exists) {
+                            strings.push_back(strdup(("Unnamed Global script " + u8val2str((uint8_t)index)).c_str()));
+                            globalscripts.push_back(std::make_pair((uint8_t)index, strings.back()));
+                        }
 #endif
                         addr = index;
                         name = globalscript2name((uint8_t)index);
@@ -3473,7 +3515,10 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
 #ifdef AUTO_DISCOVER_SCRIPTS
                         bool exists = false;
                         for (const auto& s:npcscripts) if (s.first == index) { exists=true; break; }
-                        if (!exists) npcscripts.push_back(std::make_pair((uint16_t)index, "Unnamed Short script"));
+                        if (!exists) {
+                            strings.push_back(strdup(("Unnamed Short script " + u16val2str((uint16_t)index)).c_str()));
+                            npcscripts.push_back(std::make_pair((uint16_t)index, strings.back()));
+                        }
 #endif
                         addr = index;
                         name = npcscript2name((uint16_t)index);
@@ -3485,7 +3530,10 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
 #ifdef AUTO_DISCOVER_SCRIPTS
                         bool exists = false;
                         for (const auto& s:absscripts) if (s.first == addr) { exists=true; break; }
-                        if (!exists) absscripts.push_back(std::make_pair(addr, "Unnamed ABS script"));
+                        if (!exists) {
+                            strings.push_back(strdup(("Unnamed ABS script " + u24val2str(addr)).c_str()));
+                            absscripts.push_back(std::make_pair(addr, strings.back()));
+                        }
 #endif
                         name = absscript2name(addr);
                         scripttype = "Relative (8bit)";
@@ -3497,7 +3545,10 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
 #ifdef AUTO_DISCOVER_SCRIPTS
                         bool exists = false;
                         for (const auto& s:absscripts) if (s.first == addr) { exists=true; break; }
-                        if (!exists) absscripts.push_back(std::make_pair(addr, "Unnamed ABS script"));
+                        if (!exists) {
+                            strings.push_back(strdup(("Unnamed ABS script " + u24val2str(addr)).c_str()));
+                            absscripts.push_back(std::make_pair(addr, strings.back()));
+                        }
 #endif
                         name = absscript2name(addr);
                         scripttype = "Relative (16bit)";
@@ -3509,7 +3560,10 @@ void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, si
 #ifdef AUTO_DISCOVER_SCRIPTS
                         bool exists = false;
                         for (const auto& s:absscripts) if (s.first == addr) { exists=true; break; }
-                        if (!exists) absscripts.push_back(std::make_pair(addr, "Unnamed ABS script"));
+                        if (!exists) {
+                            strings.push_back(strdup(("Unnamed ABS script " + u24val2str(addr)).c_str()));
+                            absscripts.push_back(std::make_pair(addr, strings.back()));
+                        }
 #endif
                         name = absscript2name(addr);
                     }
@@ -4045,6 +4099,11 @@ for (auto a: {0xb1e000,0x95c50d,0x95cfaa,0x95cb9a,0x9895c8,0x97cdc3}) {
     free(buf); buf = nullptr;
     printf(END);
     
+#ifdef AUTO_DISCOVER_SCRIPTS
+    for (auto s: strings) free(s);
+    strings.clear();
+#endif
+
 #if (defined(WIN32) || defined(_WIN32)) && !defined(main)
     system("pause");
 #endif
