@@ -143,10 +143,10 @@ or add points of interest by hand to ..scripts lists.
 #endif
 
 #ifdef SHOW_ABS_ADDR
-bool absAddr = true;
+static const bool absAddr = true;
 #define ADDRFMT "0x%06x"
 #else
-bool absAddr = false;
+static const bool absAddr = false;
 #define ADDRFMT "+x%02x"
 #endif
 
@@ -1407,16 +1407,16 @@ static inline uint32_t script2romaddr(uint32_t scriptaddr)
     return 0x928000 + (scriptaddr&0x007fff) + ((scriptaddr&0xff8000)<<1);
 }
 
-bool sub1bIsVal(uint8_t subinstr)
+static bool sub1bIsVal(uint8_t subinstr)
 {
     uint8_t cmd = subinstr&0x70;
     return (cmd==0x30 || cmd==0x40 || cmd==0x60);
 }
-bool sub1bIsFinalVal(uint8_t subinstr)
+static bool sub1bIsFinalVal(uint8_t subinstr)
 {
     return ((subinstr&0x80) && sub1bIsVal(subinstr));
 }
-uint16_t sub1b2val(uint8_t subinstr)
+static uint16_t sub1b2val(uint8_t subinstr)
 {
     uint8_t cmd = subinstr&0x70;
     if (cmd == 0x30) return subinstr&0x0f;
@@ -1425,11 +1425,11 @@ uint16_t sub1b2val(uint8_t subinstr)
     fprintf(stderr, "WARN: Sub-instr %02x is not a value!\n", subinstr);
     return 0;
 }
-int16_t sub1b2sval(uint8_t subinstr)
+static int16_t sub1b2sval(uint8_t subinstr)
 {
     return (int16_t)sub1b2val(subinstr);
 }
-std::string sub2currency(const std::string& subresult)
+static std::string sub2currency(const std::string& subresult)
 {
     std::string res;
     char* next = nullptr;
@@ -1442,7 +1442,7 @@ std::string sub2currency(const std::string& subresult)
     else res = "Currency "+subresult;
     return res;
 }
-bool subinstrIsEntityOnly(uint8_t subinstr)
+static bool subinstrIsEntityOnly(uint8_t subinstr)
 {
     switch (subinstr) { // NOTE: this excludes calculations
         case 0xd0: // boy
@@ -1456,11 +1456,11 @@ bool subinstrIsEntityOnly(uint8_t subinstr)
             return false;
     }
 }
-bool subinstrIsEntity(uint8_t subinstr)
+static bool subinstrIsEntity(uint8_t subinstr)
 {
     return subinstrIsEntityOnly(subinstr|0x80);
 }
-const char* subinstr2name(uint8_t subinstr)
+static const char* subinstr2name(uint8_t subinstr)
 {
     switch (subinstr&0x7f) {
         case 0x50:
@@ -1479,25 +1479,8 @@ const char* subinstr2name(uint8_t subinstr)
             return "???";
     }
 }
-unsigned subinstr2addr(uint8_t subinstr, unsigned offset=0)
-{
-    switch (subinstr&0x7F) {
-        case 0x05:
-        case 0x06:
-        case 0x07:
-        case 0x08:
-        case 0x09:
-            return 0x2258 + offset;
-        case 0x0a:
-        case 0x0d:
-        case 0x0e:
-            return 0x2834 + offset;
-        default: 
-            return 0xffff; // invalid
-    }
-}
 
-const char* absscript2name(uint32_t addr)
+static const char* absscript2name(uint32_t addr)
 {
     for (const auto& pair: absscripts) {
         if (pair.first == addr)
@@ -1505,7 +1488,7 @@ const char* absscript2name(uint32_t addr)
     }
     return "Unknown";
 }
-const char* npcscript2name(uint16_t id)
+static const char* npcscript2name(uint16_t id)
 {
     for (const auto& pair: npcscripts) {
         if (pair.first == id)
@@ -1513,7 +1496,7 @@ const char* npcscript2name(uint16_t id)
     }
     return "Unknown";
 }
-const char* globalscript2name(uint8_t id, const char* def="Unknown")
+static const char* globalscript2name(uint8_t id, const char* def="Unknown")
 {
     for (const auto& pair: globalscripts) {
         if (pair.first == id) {
@@ -1523,7 +1506,7 @@ const char* globalscript2name(uint8_t id, const char* def="Unknown")
     return def;
 }
    
-std::string ramaddr2str(uint16_t addr)
+static std::string ramaddr2str(uint16_t addr)
 {
     auto it = ram.find(addr);
     if (it != ram.end()) return it->second;
@@ -1532,7 +1515,7 @@ std::string ramaddr2str(uint16_t addr)
     snprintf(buf, 6, "$%04x", addr);
     return std::string(buf);
 }
-std::string rambit2str(uint16_t addr, uint8_t bp)
+static std::string rambit2str(uint16_t addr, uint8_t bp)
 {
     // TODO: read from a map
     // bp2bm: 0:0x01, 1:0x02, 2:0x04, 3:0x08, 4:0x10, 5:0x20, 6:0x40, 7:0x80
@@ -1667,32 +1650,32 @@ static std::string buf_get_text(const uint8_t* buf, uint32_t addr, uint32_t len,
 #define get_text(addr) buf_get_text(buf, addr, len)
 #define get_text_i(addr, spaces1, spaces2) buf_get_text(buf, addr, len, spaces1, spaces2)
 
-std::string u16addr2str(uint16_t n)
+static std::string u16addr2str(uint16_t n)
 {
     char buf[6];
     snprintf(buf, sizeof(buf), "$%04x", n);
     return buf;
 }
-std::string u8val2str(uint8_t n)
+static std::string u8val2str(uint8_t n)
 {
     char buf[5];
     snprintf(buf, sizeof(buf), "0x%02x", n);
     return buf;
 }
-std::string u16val2str(uint16_t n)
+static std::string u16val2str(uint16_t n)
 {
     char buf[7];
     snprintf(buf, sizeof(buf), "0x%04x", n);
     return buf;
 }
-std::string u24val2str(uint32_t n)
+static std::string u24val2str(uint32_t n)
 {
     char buf[11];
     snprintf(buf, sizeof(buf), "0x%06x", n);
     return buf;
 }
 
-std::string buf_parse_sub(const uint8_t* buf, uint32_t& addr, size_t len, bool* pok=nullptr, int* pexprlen=nullptr)
+static std::string buf_parse_sub(const uint8_t* buf, uint32_t& addr, size_t len, bool* pok=nullptr, int* pexprlen=nullptr)
 {
     bool ok = true;
     bool done = false;
@@ -1943,7 +1926,7 @@ std::string buf_parse_sub(const uint8_t* buf, uint32_t& addr, size_t len, bool* 
 }
 #define parse_sub(addrRef, ...) buf_parse_sub(buf, addrRef, len, __VA_ARGS__)
 
-void printwrite(const char* spaces, unsigned instroff, uint8_t instr, uint16_t ramaddr, uint16_t val, const char* hex="") // this is loRAM only
+static void printwrite(const char* spaces, unsigned instroff, uint8_t instr, uint16_t ramaddr, uint16_t val, const char* hex="") // this is loRAM only
 {
     const char* addrname = nullptr;
     const char* valname = nullptr;
@@ -1969,7 +1952,7 @@ void printwrite(const char* spaces, unsigned instroff, uint8_t instr, uint16_t r
                 spaces, instroff, instr, (unsigned)ramaddr, (unsigned)val, hex);
     }
 }
-void printwrite(const char* spaces, unsigned instroff, uint8_t instr, uint16_t ramaddr, const char* val, const char* hex="") // this is loRAM only
+static void printwrite(const char* spaces, unsigned instroff, uint8_t instr, uint16_t ramaddr, const char* val, const char* hex="") // this is loRAM only
 {
     const char* addrname = nullptr;
     auto ramit = ram.find(ramaddr);
@@ -1985,7 +1968,7 @@ void printwrite(const char* spaces, unsigned instroff, uint8_t instr, uint16_t r
                 spaces, instroff, instr, ramaddr, val, hex);
 }
 #ifdef PRINT_HEX
-const char* buf_hexdump(const uint8_t* buf, uint32_t len, char* out, size_t outlen, uint32_t start, uint32_t end, bool ellipsis=false)
+static const char* buf_hexdump(const uint8_t* buf, uint32_t len, char* out, size_t outlen, uint32_t start, uint32_t end, bool ellipsis=false)
 {
     out[0]=0;
     if (end-start==0 && !ellipsis)
@@ -2030,7 +2013,7 @@ static std::map<uint32_t, DoggoData > change_doggo;
 
 #define ADDR (absAddr ? (scriptstart+instroff) : instroff)
 #define DST (unsigned)(absAddr ? (scriptstart+dst) : dst)
-void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, size_t len, bool btrigger=false, uint8_t mapid=0, uint16_t scriptid=0, uint8_t x1=0, uint8_t y1=0, uint8_t x2=0, uint8_t y2=0, size_t depth=0)
+static void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, size_t len, bool btrigger=false, uint8_t mapid=0, uint16_t scriptid=0, uint8_t x1=0, uint8_t y1=0, uint8_t x2=0, uint8_t y2=0, size_t depth=0)
 {
     if (depth>3) return; // avoid recursion
     
