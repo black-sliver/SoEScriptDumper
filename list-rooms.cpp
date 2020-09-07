@@ -4109,7 +4109,7 @@ for (auto a: {0xb1e000,0x95c50d,0x95cfaa,0x95cb9a,0x9895c8,0x97cdc3}) {
     printf(END);
     
 #ifdef main
-    // NOTE: we would have to remove all references in of items in strings
+    // NOTE: we would have to remove all references of items to strings in scripts lists
     //       before we can clear it out, so we just leak the memory
 #else
     for (auto s: strings) free(s);
