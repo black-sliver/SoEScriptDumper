@@ -150,12 +150,15 @@ static const bool absAddr = false;
 #define ADDRFMT "+x%02x"
 #endif
 
+static bool batch = false;
+
+
 #ifndef die
 static void die(const char* msg)
 {
     fprintf(stderr, "%s", msg);
 #if (defined(WIN32) || defined(_WIN32)) && !defined(main)
-    system("pause");
+    if (!batch) system("pause");
 #endif
     exit(1);
 }
@@ -3706,13 +3709,15 @@ for (auto off: offs) {
 
 int main(int argc, char** argv)
 {
-    if (argc<2 || !argv[1] || !argv[1][0]) {
-        fprintf(stderr, "Usage: %s <rom file>\n", argv[0]);
+    if (argc<2 || !argv[1] || !argv[1][0] || (strcmp(argv[1], "-b")==0 && argc<3)) {
+        fprintf(stderr, "Usage: %s [-b] <rom file>\n\n-b: batch mode (non-interactive)\n", argv[0]);
         return 1;
     }
 
+    if (strcmp(argv[1], "-b")==0) batch = true;
+
     uint8_t* buf = NULL;
-    FILE* f = fopen(argv[1], "rb");
+    FILE* f = fopen(argv[batch?2:1], "rb");
     if (!f) die("Could not open input file!\n");
     fseek(f, 0L, SEEK_END);
     size_t len = ftell(f);
@@ -4100,7 +4105,7 @@ for (auto a: {0xb1e000,0x95c50d,0x95cfaa,0x95cb9a,0x9895c8,0x97cdc3}) {
 #endif
 
 #if (defined(WIN32) || defined(_WIN32)) && !defined(main)
-    system("pause");
+    if (!batch) system("pause");
 #endif
 
     return 0;
