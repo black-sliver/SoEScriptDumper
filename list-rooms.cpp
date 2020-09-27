@@ -770,6 +770,12 @@ static const std::map<uint16_t, const char*> prizes = {
     {0x011c, "Rando Laser Lance (0x011c)"},
     {0x0125, "Rando Gauge (0x0125)"},
     {0x0131, "Rando Amulet of A. (0x0131)"},
+    {0x01f1, "Rando Colosseum Breast (0x01f1)"},
+    {0x01f2, "Rando Colosseum Gloves (0x01f2)"},
+    {0x01f3, "Rando Colosseum Helmet (0x01f3)"},
+    {0x01f4, "Rando progressive Breast (0x01f4)"},
+    {0x01f5, "Rando progressive Gloves (0x01f5)"},
+    {0x01f6, "Rando progressive Helmet (0x01f6)"},
     // 0x0200..0x020f: ingredients
     {0x0200, "Wax (0x0200)"},
     {0x0201, "Water (0x0201)"},
