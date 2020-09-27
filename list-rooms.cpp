@@ -3892,9 +3892,11 @@ int main(int argc, char** argv)
                  n++;
                 if (n<npcscriptsprinted) continue;
                 uint32_t scriptaddr = script2romaddr(read24(mapscriptptr + pair.first));
-                printf("    \"%s\" = (id:%x => addr:0x%06x)\n",
-                    pair.second, pair.first, scriptaddr);
-                printscript("      ", buf, scriptaddr, len);
+                printf("    \"%s\" = (id:%x => addr:0x%06x)\n", pair.second, pair.first, scriptaddr);
+                if ((scriptaddr&(~0xc00000)) >= len)
+                    printf("      " RED " Invalid address " NORMAL "\n");
+                else
+                    printscript("      ", buf, scriptaddr, len);
             }
             printf("\n");
 
@@ -3904,9 +3906,11 @@ int main(int argc, char** argv)
                  n++;
                 if (n<globalscriptsprinted) continue;
                 uint32_t scriptaddr = script2romaddr(read24(globalscriptptr + 3*(uint16_t)pair.first));
-                printf("    \"%s\" = (id:%x => addr:0x%06x)\n",
-                    pair.second, pair.first, scriptaddr);
-                printscript("      ", buf, scriptaddr, len);
+                printf("    \"%s\" = (id:%x => addr:0x%06x)\n", pair.second, pair.first, scriptaddr);
+                if ((scriptaddr&(~0xc00000)) >= len)
+                    printf("      " RED " Invalid address " NORMAL "\n");
+                else
+                    printscript("      ", buf, scriptaddr, len);
             }
             printf("\n");
 
@@ -3916,9 +3920,11 @@ int main(int argc, char** argv)
                  n++;
                 if (n<=absscriptsprinted) continue;
                 if (pair.first >= 0xb00000 && len<4*1024*1024) continue; // randomizer only
-                printf("    \"%s\" = (addr:0x%06x)\n",
-                    pair.second, pair.first);
-                printscript("      ", buf, pair.first, len);
+                printf("    \"%s\" = (addr:0x%06x)\n", pair.second, pair.first);
+                if ((pair.first&(~0xc00000)) >= len)
+                    printf("      " RED " Invalid address " NORMAL "\n");
+                else
+                    printscript("      ", buf, pair.first, len);
             }
             printf("\n");
             npcscriptsprinted = npcscripts.size();
