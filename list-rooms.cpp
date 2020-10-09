@@ -547,6 +547,7 @@ std::list< std::pair<uint32_t, const char*> > absscripts = {
     {0x939eb5, "close 6th sand whirl"},
     {0x93a59a, "Sand whirl script part [1]"},
     {0x93a524, "Sand whirl script part [2]"},
+    {0x9997a7, "Sterling battle over, Gomi introduction"},
 };
 static
 #ifndef AUTO_DISCOVER_SCRIPTS
