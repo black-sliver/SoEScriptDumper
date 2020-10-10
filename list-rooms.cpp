@@ -1,6 +1,6 @@
 /*
 SoEScriptDumper - makes SoE scripts human-readable
-Copyright (C) 2020  black-sliver
+Copyright (C) 2020  black-sliver, neagix
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
