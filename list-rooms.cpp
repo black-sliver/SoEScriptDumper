@@ -174,10 +174,10 @@ static const bool absAddr = false;
 #if defined(HTML4) || defined(HTML5)
 // anchors are always in absolute address format
 #define ADDRFMT "<span><a href=\"addr-%06x\"></a>" _ADDRFMT "</span>"
-#define ADDR (_ADDR),(_ADDR)
+#define ADDR ((unsigned)(scriptstart+instroff)),(_ADDR)
 
 #define DSTFMT "(to <a href=\"#addr-%06x\">+x%02x</a>)"
-#define DST (_DST),(_DST)
+#define DST ((unsigned)absAddr),(_DST)
 
 #else
 
