@@ -548,6 +548,9 @@ std::list< std::pair<uint32_t, const char*> > absscripts = {
     {0x93a59a, "Sand whirl script part [1]"},
     {0x93a524, "Sand whirl script part [2]"},
     {0x9997a7, "Sterling battle over, Gomi introduction"},
+    {0x96e286, "Desert of Doom shuttle - random name-calling"},
+    {0x978000, "Desert of Doom shuttle - Crustacia destination"},
+    {0x96ef0d, "Desert of Doom shuttle - Nobilia destination"},
 };
 static
 #ifndef AUTO_DISCOVER_SCRIPTS
