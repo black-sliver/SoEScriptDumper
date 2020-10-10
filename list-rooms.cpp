@@ -2045,10 +2045,12 @@ enum {
     SCRIPT_END = 0x00,
     BRANCH = 0x04,              // unconditional branch
     BRANCH_NEG = 0x05,          // unconditional negative branch
+    CALL_24BIT = 0x07,
     BRANCH_IF = 0x08,
     BRANCH_IF_NOT = 0x09,
     BRANCH_IF_MONEY_GE = 0xa,   // RJMP if moniez>=amount according to darkmoon
     BRANCH_IF_MONEY_LT = 0xb,   // if moniez<amount
+    CALL_24BIT_N = 0x29,
 };
 
 static uint32_t min_addr = 0xffffffff;
@@ -2161,7 +2163,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                 }
                 break;
             }
-            case 0x07: // CALL 24bit, what's the difference to instr 29 ?
+            case CALL_24BIT: // 0x07, CALL 24bit, what's the difference to instr 29 ?
             {
                 addr = script2romaddr(read24(scriptaddr)); scriptaddr+=3;
 #ifdef AUTO_DISCOVER_SCRIPTS
@@ -2538,10 +2540,10 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                 printf("%s[" ADDRFMT "] (%02x) Fade-out screen (WRITE $0b83=0x8000)%s\n",
                     spaces, ADDR, instr, HD());
                 break;
-            case 0x29: // CALL 24bit, what's the difference to instr 29 ?
+            case CALL_24BIT_N: // 0x29, CALL 24bit, what's the difference to instr 0x07?
             {
                 addr = script2romaddr(read24(scriptaddr)); scriptaddr+=3;
- #ifdef AUTO_DISCOVER_SCRIPTS
+#ifdef AUTO_DISCOVER_SCRIPTS
                 // TODO: generate some unique name
                 bool exists = false;
                 for (const auto& s:absscripts) if (s.first == addr) { exists=true; break; }
