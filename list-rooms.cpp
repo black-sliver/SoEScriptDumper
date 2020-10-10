@@ -712,6 +712,8 @@ std::list< std::pair<uint16_t, const char*> > npcscripts = {
     {0x1a2e, "Act3 Houses NPC19"},
     {0x1a25, "Act3 Houses NPC20"},
     {0x1ad0, "Ivor Tower Well Guy"},
+    {0x040e, "Desert of Doom - wrap player West"},
+    {0x03f9, "Desert of Doom - wrap player East"},
 };
 static
 #ifndef AUTO_DISCOVER_SCRIPTS
