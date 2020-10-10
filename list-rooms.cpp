@@ -370,9 +370,9 @@ std::list< std::pair<uint32_t, const char*> > absscripts = {
     {0x92a3e7, "Queen below chessboard Pt3 (Also used elsewhere)"},
     {0x92de75, "Some cinematic script (used multiple times)"},
     {0x929e12, "Unknown Script 0x01"},
-    {0x95b17e, "Blimp cave 1"},
-    {0x95b26f, "Blimp cave 2"},
-    {0x95b2ca, "Blimp cave 2a (and other2?)"},
+    {0x95b17e, "Blimp's cave"},
+    {0x95b26f, "Blimp's cave in Crustacia"},
+    {0x95b2ca, "Blimp's cave in Crustacia - dialog pt. 2"},
     {0x9BC5E7, "Strange script"},
     {0x9BC5D0, "Strange script caller"},
     {0x9BC562, "Before Strange script caller (1)"},
@@ -388,7 +388,7 @@ std::list< std::pair<uint32_t, const char*> > absscripts = {
     {0x94d606, "FE Cutscene 2"},
     {0x94da6d, "FE Cutscene 3"},
     {0x94da42, "FE Cutscene Part (Flash) [1]"},
-    {0x94d849, "Huts Unknown 1"},
+    {0x94d849, "FE First Encounter"},
     {0x94dceb, "Blimp in Hut after Salabog?"},
     {0x9a845c, "Puppet show [1] (fight)"},
     {0x9a8aea, "Puppet show [2] (no fight)"},
@@ -577,6 +577,7 @@ std::list< std::pair<uint32_t, const char*> > absscripts = {
     {0x92cd90, "Nobilia market - no trade with dog"},
     {0x92cd97, "Nobilia market - no trade with dog"},
     {0x96ad2a, "Nobilia market - prophet easter egg dialog"},
+    {0x938369, "Prehistoria - planetfall"},
 };
 static
 #ifndef AUTO_DISCOVER_SCRIPTS
