@@ -2051,6 +2051,12 @@ enum {
     BRANCH_IF_MONEY_GE = 0xa,   // RJMP if moniez>=amount according to darkmoon
     BRANCH_IF_MONEY_LT = 0xb,   // if moniez<amount
     CALL_24BIT_N = 0x29,
+    CALL_SUB = 0xa3,            // call sub script
+    CALL_16BIT = 0xa4,          // some call instr with 16bit addr
+    CALL_8BIT_NEG = 0xa5,       // negative call with 8bit offset
+    CALL_16BIT_REL = 0xa6,      // looks like relative call with 16bit offset
+    SLEEP_8BIT = 0xa7,          // sleep/delay frames
+    SLEEP_16BIT = 0xa8,         // sleep/delay frames
 };
 
 static uint32_t min_addr = 0xffffffff;
@@ -3387,7 +3393,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                 }
                 break;
             }
-            case 0xa3: // call sub script
+            case CALL_SUB: // 0xa3, call sub script
             {
                 type = read8(scriptaddr++);
 #ifdef AUTO_DISCOVER_SCRIPTS
@@ -3412,7 +3418,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     loot.dataset |= LootData::DataSet::callGourd;
                 break;
             }
-            case 0xa4: // some call instr with 16bit addr
+            case CALL_16BIT: // 0xa4, some call instr with 16bit addr
             {
                 val16 = read16(scriptaddr); scriptaddr+=2;
 #ifdef AUTO_DISCOVER_SCRIPTS
@@ -3429,7 +3435,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     script2romaddr(read24(0x928000 + read16(0x928000) + val16)), HD());
                 break;
             }
-            case 0xa5: // looks like relative call with 8bit offset
+            case CALL_8BIT_NEG: // 0xa5, looks like a call with a negative 8bit offset
             // 8cd35c
             {
                 int16_t off = (int16_t)read8(scriptaddr++) - 0x100; // this seems to be 8bit negative address ( LDA [$82], ORA #$FF00 )
@@ -3451,7 +3457,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
 #endif
                 break;
             }
-            case 0xa6: // looks like relative call with 16bit offset
+            case CALL_16BIT_REL: // 0xa6, looks like a call with a relative 16bit offset
             // 8cd340
             {
                 int16_t off = (int16_t)read16(scriptaddr); scriptaddr+=2; // this seems to be some address, not sure
@@ -3474,8 +3480,8 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
 #endif
                 break;
             }
-            case 0xa7: // (byte) sleep / delay frames
-            case 0xa8: // (word)
+            case SLEEP_8BIT:    // 0xa7, sleep/delay frames (8-bit)
+            case SLEEP_16BIT:   // 0xa8, sleep/delay frames (16-bit)
                 if (instr==0xa7) val16 = read8(scriptaddr++);
                 else { val16 = read16(scriptaddr); scriptaddr+=2; }
                 printf("%s[" ADDRFMT "] (%02x) SLEEP %d TICKS%s\n",
