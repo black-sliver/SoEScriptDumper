@@ -1217,6 +1217,7 @@ static const std::map<std::pair<uint16_t, uint8_t>, const char*> flags = {
     
     {{0x22eb, bm2bp(0x02)}, "start pressed in intro"},
     {{0x22eb, bm2bp(0x04)}, "running showcase"},
+    {{0x22eb, bm2bp(0x08)}, "debug"},
     {{0x22eb, bm2bp(0x20)}, "in animation"},
     {{0x22ec, bm2bp(0x04)}, "on bug legs"},
     {{0x22ec, bm2bp(0x08)}, "stepped on geyser"},
