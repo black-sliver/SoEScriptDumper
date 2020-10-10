@@ -2040,6 +2040,17 @@ static const char* buf_hexdump(const uint8_t* buf, uint32_t len, char* out, size
 #define HDEL(len) _HD(scriptstart+instroff, scriptaddr+len-1, true)
 #define HDE() HDEL(0)
 
+// instruction opcode enum constants
+enum {
+    SCRIPT_END = 0x00,
+    BRANCH = 0x04,              // unconditional branch
+    BRANCH_NEG = 0x05,          // unconditional negative branch
+    BRANCH_IF = 0x08,
+    BRANCH_IF_NOT = 0x09,
+    BRANCH_IF_MONEY_GE = 0xa,   // RJMP if moniez>=amount according to darkmoon
+    BRANCH_IF_MONEY_LT = 0xb,   // if moniez<amount
+};
+
 static uint32_t min_addr = 0xffffffff;
 static uint32_t max_addr = 0x00000000;
 static unsigned instr_count = 0;
@@ -2118,12 +2129,14 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
         uint16_t val16 = 0; // used for some instructions
         uint8_t N=0; // 8bit counter
         switch (instr) {
-            case 0x00: // end
+            case SCRIPT_END:
+            {
                 printf("%s[" ADDRFMT "] (%02d) END (return)%s\n", spaces, ADDR, instr, HD());
                 unknowninstrs--;
                 NEXT_INSTR();
                 break;
-            case 0x04: // unconditional branch
+            }
+            case BRANCH: // 0x04, unconditional branch
             {
                 int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
                 signed dst = (signed)scriptaddr-scriptstart+jmp;
@@ -2133,7 +2146,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                 if (dst>maxoff) maxoff = dst;
                 break;
             }
-            case 0x05: // unconditional neagtive branch
+            case BRANCH_NEG: // 0x05, unconditional negative branch
             {
                 int16_t jmp = (int16_t)read8(scriptaddr++)-0x100;
                 signed dst = (signed)scriptaddr-2-scriptstart+jmp;
@@ -2164,8 +2177,12 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     spaces, ADDR, instr, addr, absscript2name(addr), HD());
                 break;
             }
-            case 0x08: // branch on true
-            case 0x09: // branch on false
+            case BRANCH_IF:     // 0x08
+                bool condition;
+                condition = true;
+                // fall through
+            case BRANCH_IF_NOT: // 0x09
+                condition = false;
                 // NOTE: this uses sub-instruction chaining, msbit in sub-instr set means last sub-instr
                 //       we need to have special cases for sniff, gourds and doggo lists at the moment
                 // TODO: reduce special cases to a minimum (unified parse_subinstr() is at the end)
@@ -2174,7 +2191,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
                     signed dst = (signed)scriptaddr-scriptstart+jmp;
                     printf("%s[" ADDRFMT "] (%02x) IF controlled char %s dog SKIP %d (to +x%02x)%s\n",
-                            spaces, ADDR, instr, instr==0x09 ? "!=" : "==", jmp, DST, HD());
+                            spaces, ADDR, instr, condition ? "==" : "!=", jmp, DST, HD());
                     offs.push_back(dst);
                     if (dst>maxoff) maxoff = dst;
                 } else if ((type&0xf0)==0x30 && read8(scriptaddr+0)==0x14 && read8(scriptaddr+1)==0x14 && read8(scriptaddr+2)==0x94) {
@@ -2183,7 +2200,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
                     signed dst = (signed)scriptaddr-scriptstart+jmp;
                     printf("%s[" ADDRFMT "] (%02x) IF !!!FALSE == %s SKIP %d (to +x%02x)%s\n",
-                            spaces, ADDR, instr, (instr==0x09)^(type!=0x30) ? "FALSE (never)" : "TRUE (always)", jmp, DST, HD());
+                            spaces, ADDR, instr, (!condition)^(type!=0x30) ? "FALSE (never)" : "TRUE (always)", jmp, DST, HD());
                     offs.push_back(dst);
                     if (dst>maxoff) maxoff = dst;
                 } else if ((type&0xf0)==0x30 && read8(scriptaddr+0)==0x14 && read8(scriptaddr+1)==0x94) {
@@ -2192,10 +2209,10 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
                     signed dst = (signed)scriptaddr-scriptstart+jmp;
                     printf("%s[" ADDRFMT "] (%02x) IF !!FALSE == %s SKIP %d (to +x%02x)%s\n",
-                            spaces, ADDR, instr, (instr==0x09)^(type!=0x30) ? "FALSE (always)" : "TRUE (never)", jmp, DST, HD());
+                            spaces, ADDR, instr, (!condition)^(type!=0x30) ? "FALSE (always)" : "TRUE (never)", jmp, DST, HD());
                     offs.push_back(dst);
                     if (dst>maxoff) maxoff = dst;
-                } else if (instr==0x09 && type==0x05 && read8(scriptaddr+2)==0x14 && read8(scriptaddr+3)==0x29 && read8(scriptaddr+4)==0x05 && read8(scriptaddr+7)==0x14 && read8(scriptaddr+8)==0xa8) {
+                } else if (!condition && type==0x05 && read8(scriptaddr+2)==0x14 && read8(scriptaddr+3)==0x29 && read8(scriptaddr+4)==0x05 && read8(scriptaddr+7)==0x14 && read8(scriptaddr+8)==0xa8) {
                     // this is more readable than unified sub parser's output
                     // TODO: readable names as above
                     // traxx: 09 05 <addr,bp> 14 29 05 <addr,bp> 14 a8: IF (!test2 && !test2 == false) skip
@@ -2217,7 +2234,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     // this is supposed to be better readable than unified parser's output
                     // test bit, 0x09:0->jump, 0x08:1->jump
                     // TODO: also allow type==0x0a (temp bit)
-                    bool invert = (instr==0x09) ^ (type==0x05);
+                    bool invert = (!condition) ^ (type==0x05);
                     val16 = read16(scriptaddr); scriptaddr+=2;
                     if (type == 0x05) scriptaddr++; // skip over inversion
                     int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
@@ -2225,8 +2242,8 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     addr = 0x2258 + (val16>>3);
                     unsigned testbm = 1<<(val16&0x7);
                     std::string readable = rambit2str(addr, val16&0x7);
-                    printf("%s[" ADDRFMT "] (%02x) IF %s$%04x&0x%02x%s %sSKIP %d (to +x%02x)%s\n",
-                        spaces, ADDR, instr, invert?"!(":"", addr, testbm, invert?")":"", readable.c_str(), jmp, DST, HD());
+                    printf("%s[" ADDRFMT "] (%02x) IF %s$%04x&0x%02x%s %s%sSKIP %d (to +x%02x)%s\n",
+                        spaces, ADDR, instr, invert?"!(":"", addr, testbm, invert?")":"", (invert && !readable.empty())?"NOT":"", readable.c_str(), jmp, DST, HD());
                     loot.check_flag = {addr,val16&0x7};
                     loot.dataset |= LootData::DataSet::check;
                     offs.push_back(dst);
@@ -2251,7 +2268,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     loot.dataset |= LootData::DataSet::check;
                     offs.push_back(dst);
                     if (dst>maxoff) maxoff = dst;
-                } else if (instr==0x09 && type == 0x88) {
+                } else if (!condition && type == 0x88) {
                     // read value, 0->jump
                     addr = 0x2258 + read16(scriptaddr); scriptaddr+=2;
                     int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
@@ -2269,18 +2286,18 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                         int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
                         signed dst = (signed)scriptaddr-scriptstart+jmp;
                         printf("%s[" ADDRFMT "] (%02x) IF %s%s%s%s THEN SKIP %d (to +x%02x)%s\n",
-                               spaces, ADDR, instr, (instr==0x08||exprlen<2)?"": "(", expr.c_str(), (instr==0x08||exprlen<2)?"": ")", instr==0x08?"":" == FALSE", jmp, DST, HD());
+                               spaces, ADDR, instr, (condition||exprlen<2)?"": "(", expr.c_str(), (condition||exprlen<2)?"": ")", condition?"":" == FALSE", jmp, DST, HD());
                         offs.push_back(dst);
                         if (dst>maxoff) maxoff = dst;
                     } else {
                         printf("%s[" ADDRFMT "] " RED "(%02x) IF %s%s%s%s THEN SKIP ...?" NORMAL "%s\n",
-                               spaces, ADDR, instr, (instr==0x08||exprlen<2)?"": "(", expr.c_str(), (instr==0x08||exprlen<2)?"": ")", instr==0x08?"":" == FALSE", HDE());
+                               spaces, ADDR, instr, (condition||exprlen<2)?"": "(", expr.c_str(), (condition||exprlen<2)?"": ")", condition?"":" == FALSE", HDE());
                         NEXT_INSTR();
                     }
                 }
                 break;
-            case 0x0a: // RJMP if moniez>=amount according to darkmoon
-            case 0x0b: // if moniez<amount
+            case BRANCH_IF_MONEY_GE: // RJMP if moniez>=amount according to darkmoon
+            case BRANCH_IF_MONEY_LT: // if moniez<amount
             {
                 const char* op = (instr==0x0a) ? GE : LT;
                 bool ok = true;
@@ -2713,7 +2730,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
             case 0x42: // Teleport entity from sub-instr to byte,byte
             {
                 // TODO: verify X,Y is not swapped
-                const char* toby = (instr==0x42)?"to":"by";
+                const char* toby = "to";
                 bool ok = true;
                 std::string entity = parse_sub(scriptaddr, &ok);
                 val16 = read16(scriptaddr); scriptaddr+=2;
@@ -2731,6 +2748,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                 break;
             }
             case 0x43: // Teleport entity from sub-instr to sub-instr,sub-instr
+                // fall through
             case 0xb9: // relative teleport according to darkmoon
             {
                 // TODO: verify X,Y is not swapped
