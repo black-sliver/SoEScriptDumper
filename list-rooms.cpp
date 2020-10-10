@@ -162,10 +162,30 @@ or add points of interest by hand to ..scripts lists.
 
 #ifdef SHOW_ABS_ADDR
 static const bool absAddr = true;
-#define ADDRFMT "0x%06x"
+#define _ADDRFMT "0x%06x"
 #else
 static const bool absAddr = false;
-#define ADDRFMT "+x%02x"
+#define _ADDRFMT "+x%02x"
+#endif
+
+#define _ADDR (absAddr ? (scriptstart+instroff) : instroff)
+#define _DST (unsigned)(absAddr ? (scriptstart+dst) : dst)
+
+#if defined(HTML4) || defined(HTML5)
+// anchors are always in absolute address format
+#define ADDRFMT "<span><a href=\"addr-%06x\"></a>" _ADDRFMT "</span>"
+#define ADDR (_ADDR),(_ADDR)
+
+#define DSTFMT "(to <a href=\"#addr-%06x\">+x%02x</a>)"
+#define DST (_DST),(_DST)
+
+#else
+
+#define ADDRFMT _ADDRFMT
+#define DSTFMT "(to +x%02x)"
+#define DST (_DST)
+#define ADDR _ADDR
+
 #endif
 
 static bool batch = false;
@@ -1965,7 +1985,7 @@ static std::string buf_parse_sub(const uint8_t* buf, uint32_t& addr, size_t len,
 }
 #define parse_sub(addrRef, ...) buf_parse_sub(buf, addrRef, len, __VA_ARGS__)
 
-static void printwrite(const char* spaces, unsigned instroff, uint8_t instr, uint16_t ramaddr, uint16_t val, const char* hex="") // this is loRAM only
+static void printwrite(const char* spaces, uint32_t scriptstart, unsigned instroff, uint8_t instr, uint16_t ramaddr, uint16_t val, const char* hex="") // this is loRAM only
 {
     const char* addrname = nullptr;
     const char* valname = nullptr;
@@ -1982,16 +2002,16 @@ static void printwrite(const char* spaces, unsigned instroff, uint8_t instr, uin
 
     if (addrname && valname) {
         printf("%s[" ADDRFMT "] (%02x) WRITE %s = %s%s\n",
-                spaces, instroff, instr, addrname, valname, hex);
+                spaces, ADDR, instr, addrname, valname, hex);
     } else if (addrname) {
         printf("%s[" ADDRFMT "] (%02x) WRITE %s = 0x%04x%s\n",
-                spaces, instroff, instr, addrname, (unsigned)val, hex);
+                spaces, ADDR, instr, addrname, (unsigned)val, hex);
     } else {
         printf("%s[" ADDRFMT "] (%02x) WRITE $%04x = 0x%04x%s\n",
-                spaces, instroff, instr, (unsigned)ramaddr, (unsigned)val, hex);
+                spaces, ADDR, instr, (unsigned)ramaddr, (unsigned)val, hex);
     }
 }
-static void printwrite(const char* spaces, unsigned instroff, uint8_t instr, uint16_t ramaddr, const char* val, const char* hex="") // this is loRAM only
+static void printwrite(const char* spaces, uint32_t scriptstart, unsigned instroff, uint8_t instr, uint16_t ramaddr, const char* val, const char* hex="") // this is loRAM only
 {
     const char* addrname = nullptr;
     auto ramit = ram.find(ramaddr);
@@ -2001,10 +2021,10 @@ static void printwrite(const char* spaces, unsigned instroff, uint8_t instr, uin
 
     if (addrname)
         printf("%s[" ADDRFMT "] (%02x) WRITE %s = %s%s\n",
-                spaces, instroff, instr, addrname, val, hex);
+                spaces, ADDR, instr, addrname, val, hex);
     else
         printf("%s[" ADDRFMT "] (%02x) WRITE $%04x = %s%s\n",
-                spaces, instroff, instr, ramaddr, val, hex);
+                spaces, ADDR, instr, ramaddr, val, hex);
 }
 #ifdef PRINT_HEX
 static const char* buf_hexdump(const uint8_t* buf, uint32_t len, char* out, size_t outlen, uint32_t start, uint32_t end, bool ellipsis=false)
@@ -2050,8 +2070,6 @@ static std::list<LootData> sniffs;
 static std::list<LootData> gourds;
 static std::map<uint32_t, DoggoData > change_doggo;
 
-#define ADDR (absAddr ? (scriptstart+instroff) : instroff)
-#define DST (unsigned)(absAddr ? (scriptstart+dst) : dst)
 static void printscript(const char* spaces, const uint8_t* buf, uint32_t scriptaddr, size_t len, bool btrigger=false, uint8_t mapid=0, uint16_t scriptid=0, uint8_t x1=0, uint8_t y1=0, uint8_t x2=0, uint8_t y2=0, size_t depth=0)
 {
     if (depth>3) return; // avoid recursion
@@ -2127,7 +2145,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
             {
                 int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
                 signed dst = (signed)scriptaddr-scriptstart+jmp;
-                printf("%s[" ADDRFMT "] (%02x) SKIP %d (to +x%02x)%s\n",
+                printf("%s[" ADDRFMT "] (%02x) SKIP %d " DSTFMT "%s\n",
                     spaces, ADDR, instr, jmp, DST, HD());
                 offs.push_back(dst);
                 if (dst>maxoff) maxoff = dst;
@@ -2137,7 +2155,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
             {
                 int16_t jmp = (int16_t)read8(scriptaddr++)-0x100;
                 signed dst = (signed)scriptaddr-2-scriptstart+jmp;
-                printf("%s[" ADDRFMT "] (%02x) SKIP %d (to +x%02x)%s\n",
+                printf("%s[" ADDRFMT "] (%02x) SKIP %d " DSTFMT "%s\n",
                     spaces, ADDR, instr, jmp, DST, HD());
                 if (dst>=0) {
                     offs.push_back(dst);
@@ -2173,7 +2191,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                 if (type==0xd7) {
                     int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
                     signed dst = (signed)scriptaddr-scriptstart+jmp;
-                    printf("%s[" ADDRFMT "] (%02x) IF controlled char %s dog SKIP %d (to +x%02x)%s\n",
+                    printf("%s[" ADDRFMT "] (%02x) IF controlled char %s dog SKIP %d " DSTFMT "%s\n",
                             spaces, ADDR, instr, instr==0x09 ? "!=" : "==", jmp, DST, HD());
                     offs.push_back(dst);
                     if (dst>maxoff) maxoff = dst;
@@ -2182,7 +2200,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     scriptaddr+=3;
                     int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
                     signed dst = (signed)scriptaddr-scriptstart+jmp;
-                    printf("%s[" ADDRFMT "] (%02x) IF !!!FALSE == %s SKIP %d (to +x%02x)%s\n",
+                    printf("%s[" ADDRFMT "] (%02x) IF !!!FALSE == %s SKIP %d " DSTFMT "%s\n",
                             spaces, ADDR, instr, (instr==0x09)^(type!=0x30) ? "FALSE (never)" : "TRUE (always)", jmp, DST, HD());
                     offs.push_back(dst);
                     if (dst>maxoff) maxoff = dst;
@@ -2191,7 +2209,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     scriptaddr+=2;
                     int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
                     signed dst = (signed)scriptaddr-scriptstart+jmp;
-                    printf("%s[" ADDRFMT "] (%02x) IF !!FALSE == %s SKIP %d (to +x%02x)%s\n",
+                    printf("%s[" ADDRFMT "] (%02x) IF !!FALSE == %s SKIP %d " DSTFMT "%s\n",
                             spaces, ADDR, instr, (instr==0x09)^(type!=0x30) ? "FALSE (always)" : "TRUE (never)", jmp, DST, HD());
                     offs.push_back(dst);
                     if (dst>maxoff) maxoff = dst;
@@ -2208,8 +2226,8 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     int16_t jmp = (int16_t)read16(scriptaddr+9);
                     scriptaddr += 11;
                     signed dst = (signed)scriptaddr-scriptstart+jmp;
-                    //printf("%s[" ADDRFMT "] IF ((! $%04x&0x%02x) AND (! $%04x&0x%02x)) == FALSE SKIP %d (to +x%02x)%s\n",
-                    printf("%s[" ADDRFMT "] (%02x) IF (($%04x&0x%02x) OR ($%04x&0x%02x)) SKIP %d (to +x%02x)%s\n",
+                    //printf("%s[" ADDRFMT "] IF ((! $%04x&0x%02x) AND (! $%04x&0x%02x)) == FALSE SKIP %d " DSTFMT "%s\n",
+                    printf("%s[" ADDRFMT "] (%02x) IF (($%04x&0x%02x) OR ($%04x&0x%02x)) SKIP %d " DSTFMT "%s\n",
                             spaces, ADDR, instr, addr, testbm, addr2, testbm2, jmp, DST, HD());
                     offs.push_back(dst);
                     if (dst>maxoff) maxoff = dst;
@@ -2225,7 +2243,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     addr = 0x2258 + (val16>>3);
                     unsigned testbm = 1<<(val16&0x7);
                     std::string readable = rambit2str(addr, val16&0x7);
-                    printf("%s[" ADDRFMT "] (%02x) IF %s$%04x&0x%02x%s %sSKIP %d (to +x%02x)%s\n",
+                    printf("%s[" ADDRFMT "] (%02x) IF %s$%04x&0x%02x%s %sSKIP %d " DSTFMT "%s\n",
                         spaces, ADDR, instr, invert?"!(":"", addr, testbm, invert?")":"", readable.c_str(), jmp, DST, HD());
                     loot.check_flag = {addr,val16&0x7};
                     loot.dataset |= LootData::DataSet::check;
@@ -2245,7 +2263,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     addr = 0x2258 + (val16>>3);
                     unsigned testbm = 1<<(val16&0x7);
                     std::string readable = rambit2str(addr, val16&0x7);
-                    printf("%s[" ADDRFMT "] (%02x) IF %s$%04x & 0x%02x %s%s %s$%04x==0x%02x SKIP %d (to +x%02x)%s\n",
+                    printf("%s[" ADDRFMT "] (%02x) IF %s$%04x & 0x%02x %s%s %s$%04x==0x%02x SKIP %d " DSTFMT "%s\n",
                         spaces, ADDR, instr, (type==0x09?"!":""), addr, testbm, readable.c_str(), (type==0x09?"||":"&&"), (type==0x09?"!":""), addr2, val2, jmp, DST, HD());
                     loot.check_flag = {addr,val16&0x7};
                     loot.dataset |= LootData::DataSet::check;
@@ -2256,7 +2274,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     addr = 0x2258 + read16(scriptaddr); scriptaddr+=2;
                     int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
                     signed dst = (signed)scriptaddr-scriptstart+jmp;
-                    printf("%s[" ADDRFMT "] (%02x) IF $%04x == 0x00 SKIP %d (to +x%02x)%s\n",
+                    printf("%s[" ADDRFMT "] (%02x) IF $%04x == 0x00 SKIP %d " DSTFMT "%s\n",
                         spaces, ADDR, instr, addr, jmp, DST, HD());
                     offs.push_back(dst);
                     if (dst>maxoff) maxoff = dst;
@@ -2268,7 +2286,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     if (ok) {
                         int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
                         signed dst = (signed)scriptaddr-scriptstart+jmp;
-                        printf("%s[" ADDRFMT "] (%02x) IF %s%s%s%s THEN SKIP %d (to +x%02x)%s\n",
+                        printf("%s[" ADDRFMT "] (%02x) IF %s%s%s%s THEN SKIP %d " DSTFMT "%s\n",
                                spaces, ADDR, instr, (instr==0x08||exprlen<2)?"": "(", expr.c_str(), (instr==0x08||exprlen<2)?"": ")", instr==0x08?"":" == FALSE", jmp, DST, HD());
                         offs.push_back(dst);
                         if (dst>maxoff) maxoff = dst;
@@ -2289,7 +2307,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                 int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
                 signed dst = (signed)scriptaddr-scriptstart+jmp;
                 if (ok) {
-                    printf("%s[" ADDRFMT "] (%02x) IF %s (moniez) %s %u THEN SKIP %d (to +x%02x)%s\n",
+                    printf("%s[" ADDRFMT "] (%02x) IF %s (moniez) %s %u THEN SKIP %d " DSTFMT "%s\n",
                         spaces, ADDR, instr, currency.c_str(), op, v, jmp, DST, HD());
                     offs.push_back(dst);
                     if (dst>maxoff) maxoff = dst;
@@ -2363,7 +2381,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
             case 0x17: // set value fast
                 addr  = 0x2258 + (unsigned)read16(scriptaddr); scriptaddr+=2;
                 val16 = (unsigned)read16(scriptaddr); scriptaddr+=2;
-                printwrite(spaces, ADDR, instr, addr, val16, HD());
+                printwrite(spaces, scriptstart, instroff, instr, addr, val16, HD());
                 if (addr == 0x2391) {  // item
                     loot.item = val16;
                     loot.item_pos = scriptstart+instroff+3; // instr,addrhi:lo,val
@@ -2419,21 +2437,21 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                 if (sub1bIsFinalVal(type)) {
                     addrmode = 3;
                     val16 = sub1b2val(type);
-                    printwrite(spaces, ADDR, instr, addr, val16, HD());
+                    printwrite(spaces, scriptstart, instroff, instr, addr, val16, HD());
                 } else if (type == 0x82) { // write from byte
                     addrmode = 1;
                     val16 = read8(scriptaddr++);
-                    printwrite(spaces, ADDR, instr, addr, val16, HD());
+                    printwrite(spaces, scriptstart, instroff, instr, addr, val16, HD());
                 } else if (type == 0x84) { // write from word
                     addrmode = 2;
                     val16 = read16(scriptaddr); scriptaddr+=2;
-                    printwrite(spaces, ADDR, instr, addr, val16, HD());
+                    printwrite(spaces, scriptstart, instroff, instr, addr, val16, HD());
                 } else {
                     bool ok = true;
                     scriptaddr--;
                     std::string v = parse_sub(scriptaddr, &ok);
                     if (ok) {
-                        printwrite(spaces, ADDR, instr, addr, v.c_str(), HD());
+                        printwrite(spaces, scriptstart, instroff, instr, addr, v.c_str(), HD());
                     } else {
                         printf("%s[" ADDRFMT "] " RED "(%02x) WRITE $%04x = %s" NORMAL "%s\n",
                             spaces, ADDR, instr, addr, v.c_str(), HDE());
@@ -2483,8 +2501,8 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     unsigned addr2 = 0x2258 + read16(scriptaddr); scriptaddr+=2;
                     unsigned val1 = ((unsigned)read8(scriptaddr++))<<3;
                     unsigned val2 = ((unsigned)read8(scriptaddr++))<<3;
-                    printwrite(spaces, ADDR, instr, addr1, val1);
-                    printwrite(spaces, ADDR, instr, addr2, val2, HD());
+                    printwrite(spaces, scriptstart, instroff, instr, addr1, val1);
+                    printwrite(spaces, scriptstart, instroff, instr, addr2, val2, HD());
                 }
                 break;
             case 0x20: // Teleport both characters (Unknown, writes to boy data and does more stuff)
@@ -3168,7 +3186,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                 int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
                 signed dst = (signed)scriptaddr-scriptstart+jmp;
                 if (ok) {
-                    printf("%s[" ADDRFMT "] (%02x) IF %s (moniez) %s %s THEN SKIP %d (to +x%02x)%s\n",
+                    printf("%s[" ADDRFMT "] (%02x) IF %s (moniez) %s %s THEN SKIP %d " DSTFMT "%s\n",
                         spaces, ADDR, instr, currency.c_str(), op, v.c_str(), jmp, DST, HD());
                     offs.push_back(dst);
                     if (dst>maxoff) maxoff = dst;
@@ -3492,8 +3510,8 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                 unsigned addr2 = 0x2834+read16(scriptaddr); scriptaddr+=2;
                 unsigned val1  = read8(scriptaddr++); val1<<=3;
                 unsigned val2  = read8(scriptaddr++); val1<<=3;
-                printwrite(spaces, ADDR, instr, addr1, val1, HD());
-                printwrite(spaces, ADDR, instr, addr2, val2);
+                printwrite(spaces, scriptstart, instroff, instr, addr1, val1, HD());
+                printwrite(spaces, scriptstart, instroff, instr, addr2, val2);
                 break;
             }
             case 0xae: // unknown, modifies current script
