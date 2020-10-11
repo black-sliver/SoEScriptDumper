@@ -3827,7 +3827,7 @@ int main(int argc, char** argv)
     uint32_t mapscriptptr = 0x928000 + read16(0x928000);
     uint32_t globalscriptptr = 0x928000 + read16(0x928000) + read16(0x928008);
     
-    printf(START);
+    printf("%s", START);
     printf("Map script adresses are located at 0x%06x\n", mapscriptptr);
     printf("Global/callable script adresses at 0x%06x\n", globalscriptptr);
     
@@ -4181,7 +4181,7 @@ for (auto a: {0xb1e000,0x95c50d,0x95cfaa,0x95cb9a,0x9895c8,0x97cdc3}) {
 #endif
 
     free(buf); buf = nullptr;
-    printf(END);
+    printf("%s", END);
     
 #ifdef main
     // NOTE: we would have to remove all references of items to strings in scripts lists
