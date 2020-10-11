@@ -2192,7 +2192,6 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
             {
                 addr = script2romaddr(read24(scriptaddr)); scriptaddr+=3;
 #ifdef AUTO_DISCOVER_SCRIPTS
-                // TODO: generate some unique name
                 bool exists = false;
                 for (const auto& s:absscripts) if (s.first == addr) { exists=true; break; }
                 if (!exists) {
@@ -2569,7 +2568,6 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
             {
                 addr = script2romaddr(read24(scriptaddr)); scriptaddr+=3;
 #ifdef AUTO_DISCOVER_SCRIPTS
-                // TODO: generate some unique name
                 bool exists = false;
                 for (const auto& s:absscripts) if (s.first == addr) { exists=true; break; }
                 if (!exists) {
