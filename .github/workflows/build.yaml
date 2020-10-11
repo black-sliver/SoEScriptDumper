@@ -1,0 +1,27 @@
+name: C/C++ CI
+
+on: [push,pull_request]
+
+jobs:
+  build-ubuntu:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: default build
+      run: g++ list-rooms.cpp -o soe-script-dumper
+    - name: HTML5 build
+      run: g++ -DHTML5 list-rooms.cpp -o soe-script-dumper
+    - name: HTML4 build
+      run: g++ -DHTML4 list-rooms.cpp -o soe-script-dumper
+
+  build-windows:
+
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - uses: ilammy/msvc-dev-cmd@v1
+    - name: build (default)
+      run: cl.exe /EHsc list-rooms.cpp /out:soe-script-dumper.exe
