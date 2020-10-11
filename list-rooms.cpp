@@ -161,29 +161,30 @@ or add points of interest by hand to ..scripts lists.
 #endif
 
 #ifdef SHOW_ABS_ADDR
-static const bool absAddr = true;
+// absolute addresses
+#define _ADDR (scriptstart+instroff)
 #define _ADDRFMT "0x%06x"
+#define _DST (unsigned)(scriptstart+dst)
 #else
-static const bool absAddr = false;
+// relative addresses
+#define _ADDR   instroff
 #define _ADDRFMT "+x%02x"
+#define _DST (unsigned)(dst)
 #endif
-
-#define _ADDR (absAddr ? (scriptstart+instroff) : instroff)
-#define _DST (unsigned)(absAddr ? (scriptstart+dst) : dst)
 
 #if defined(HTML4) || defined(HTML5)
 // anchors are always in absolute address format
-#define ADDRFMT "<span><a href=\"addr-%06x\"></a>" _ADDRFMT "</span>"
+#define ADDRFMT "<span id=\"addr_0x%06x\">" _ADDRFMT "</span>"
 #define ADDR ((unsigned)(scriptstart+instroff)),(_ADDR)
 
-#define DSTFMT "(to <a href=\"#addr-%06x\">+x%02x</a>)"
-#define DST ((unsigned)absAddr),(_DST)
+#define DSTFMT "(to <a href=\"#addr_0x%06x\">+x%02x</a>)"
+#define DST ((unsigned)(scriptstart+dst)), _DST
 
 #else
 
 #define ADDRFMT _ADDRFMT
 #define DSTFMT "(to +x%02x)"
-#define DST (_DST)
+#define DST _DST
 #define ADDR _ADDR
 
 #endif
