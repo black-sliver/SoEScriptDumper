@@ -2277,7 +2277,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     addr = 0x2258 + (val16>>3);
                     unsigned testbm = 1<<(val16&0x7);
                     std::string readable = rambit2str(addr, val16&0x7);
-                    printf("%s[" ADDRFMT "] (%02x) IF %s$%04x&0x%02x%s %s%sSKIP %d " DSTFMT "%s%s\n",
+                    printf("%s[" ADDRFMT "] (%02x) IF %s$%04x&0x%02x%s %s%sSKIP %d " DSTFMT "%s\n",
                         spaces, ADDR, instr, invert?"!(":"", addr, testbm, invert?")":"", (invert && !readable.empty())?"NOT":"", readable.c_str(), jmp, DST, HD());
                     loot.check_flag = {addr,val16&0x7};
                     loot.dataset |= LootData::DataSet::check;
