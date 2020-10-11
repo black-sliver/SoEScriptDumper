@@ -1576,6 +1576,16 @@ static const char* globalscript2name(uint8_t id, const char* def="Unknown")
     return def;
 }
 
+
+static std::string ramaddr2str(uint16_t addr)
+{
+    auto it = ram.find(addr);
+    if (it != ram.end()) return it->second;
+
+    char buf[6];
+    snprintf(buf, 6, "$%04x", addr);
+    return std::string(buf);
+}
 static std::string rambit2str(uint16_t addr, uint8_t bp)
 {
     // bp2bm: 0:0x01, 1:0x02, 2:0x04, 3:0x08, 4:0x10, 5:0x20, 6:0x40, 7:0x80
@@ -2294,13 +2304,14 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     loot.dataset |= LootData::DataSet::check;
                     offs.push_back(dst);
                     if (dst>maxoff) maxoff = dst;
-                } else if (!condition && type == 0x88) {
-                    // read value, 0->jump
+                } else if (type == 0x88) {
+                    // read value, ==0 or !=0 ->jump
                     addr = 0x2258 + read16(scriptaddr); scriptaddr+=2;
                     int16_t jmp = (int16_t)read16(scriptaddr); scriptaddr+=2;
                     signed dst = (signed)scriptaddr-scriptstart+jmp;
-                    printf("%s[" ADDRFMT "] (%02x) IF $%04x == 0x00 SKIP %d " DSTFMT "%s\n",
-                        spaces, ADDR, instr, addr, jmp, DST, HD());
+                    std::string readable = ramaddr2str(addr);
+                    printf("%s[" ADDRFMT "] (%02x) IF %s %s 0x00 SKIP %d " DSTFMT "%s\n",
+                        spaces, ADDR, instr, readable.c_str(), condition?"!=":"==", jmp, DST, HD());
                     offs.push_back(dst);
                     if (dst>maxoff) maxoff = dst;
                 } else {
