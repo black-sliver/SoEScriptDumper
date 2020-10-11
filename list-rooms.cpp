@@ -166,11 +166,13 @@ or add points of interest by hand to ..scripts lists.
 #define _ADDR (scriptstart+instroff)
 #define _ADDRFMT "0x%06x"
 #define _DST (unsigned)(scriptstart+dst)
+#define _DSTFMT "(to 0x%06x)"
 #else
 // relative addresses
 #define _ADDR   instroff
 #define _ADDRFMT "+x%02x"
 #define _DST (unsigned)(dst)
+#define _DSTFMT "(to +x%02x)"
 #endif
 
 #if defined(HYPERLINKS) && (defined(HTML4) || defined(HTML5))
@@ -178,13 +180,13 @@ or add points of interest by hand to ..scripts lists.
 #define ADDRFMT "<span id=\"addr_0x%06x\">" _ADDRFMT "</span>"
 #define ADDR ((unsigned)(scriptstart+instroff)),(_ADDR)
 
-#define DSTFMT "(to <a href=\"#addr_0x%06x\">+x%02x</a>)"
+#define DSTFMT "(to <a href=\"#addr_0x%06x\">" _DSTFMT "</a>)"
 #define DST ((unsigned)(scriptstart+dst)), _DST
 
 #else
 
 #define ADDRFMT _ADDRFMT
-#define DSTFMT "(to +x%02x)"
+#define DSTFMT _DSTFMT
 #define DST _DST
 #define ADDR _ADDR
 
