@@ -92,6 +92,7 @@ or add points of interest by hand to ..scripts lists.
 //#define PRINT_HEX // add hex dump to output
 #define INLINE_RCALLS // prints out RCALLED code as part of script
 #define AUTO_DISCOVER_SCRIPTS
+//#define HYPERLINKS
 
 // test compiler feature
 #ifndef __has_include
@@ -172,7 +173,7 @@ or add points of interest by hand to ..scripts lists.
 #define _DST (unsigned)(dst)
 #endif
 
-#if defined(HTML4) || defined(HTML5)
+#if defined(HYPERLINKS) && (defined(HTML4) || defined(HTML5))
 // anchors are always in absolute address format
 #define ADDRFMT "<span id=\"addr_0x%06x\">" _ADDRFMT "</span>"
 #define ADDR ((unsigned)(scriptstart+instroff)),(_ADDR)
