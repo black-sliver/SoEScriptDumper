@@ -1235,7 +1235,7 @@ static const std::map<std::pair<uint16_t, uint8_t>, const char*> flags = {
     
     {{0x22e7, bm2bp(0x80)}, "Talked to Dude below chessboard"},
     {{0x22e8, bm2bp(0x02)}, "Salabog fight started"},
-    {{0x22e9, bm2bp(0x10)}, "Killed robots without using ammo"}, // Carltron in Crustacia easter egg
+    {{0x22e9, bm2bp(0x10)}, "Killed robots with no ammo left"}, // Carltron in Crustacia easter egg
     {{0x22e9, bm2bp(0x40)}, "Ruins Minitaur defeated"},
     
     {{0x22ea, bm2bp(0x01)}, "Loot successful"},
