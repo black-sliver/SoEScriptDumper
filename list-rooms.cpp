@@ -1573,19 +1573,9 @@ static const char* globalscript2name(uint8_t id, const char* def="Unknown")
     }
     return def;
 }
-   
-static std::string ramaddr2str(uint16_t addr)
-{
-    auto it = ram.find(addr);
-    if (it != ram.end()) return it->second;
-    
-    char buf[6];
-    snprintf(buf, 6, "$%04x", addr);
-    return std::string(buf);
-}
+
 static std::string rambit2str(uint16_t addr, uint8_t bp)
 {
-    // TODO: read from a map
     // bp2bm: 0:0x01, 1:0x02, 2:0x04, 3:0x08, 4:0x10, 5:0x20, 6:0x40, 7:0x80
     auto it = flags.find(std::make_pair(addr,bp));
     if (it != flags.end())
