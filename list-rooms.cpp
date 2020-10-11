@@ -228,6 +228,7 @@ std::list< std::pair<uint8_t, const char*> > maps = {
     {0x36, "Prehistoria - Both fire pits (one room)"},
     
     {0x53, "Antiqua - Act2 Start Cutscene"},
+    {0x6A, "Antiqua - Act2 Start Cutscene - waterfall"},
     
     {0x0A, "Antiqua - Nobilia, Market"},
     {0x08, "Antiqua - Nobilia, Square"},
@@ -1212,6 +1213,7 @@ static const std::map<std::pair<uint16_t, uint8_t>, const char*> flags = {
     
     {{0x22e7, bm2bp(0x80)}, "Talked to Dude below chessboard"},
     {{0x22e8, bm2bp(0x02)}, "Salabog fight started"},
+    {{0x22e9, bm2bp(0x10)}, "Killed robots without using ammo"}, // Carltron in Crustacia easter egg
     {{0x22e9, bm2bp(0x40)}, "Ruins Minitaur defeated"},
     
     {{0x22ea, bm2bp(0x01)}, "Loot successful"},
@@ -1236,7 +1238,7 @@ static const std::map<std::pair<uint16_t, uint8_t>, const char*> flags = {
     {{0x22f1, bm2bp(0x02)}, "Stealing from gourds is OK msg shown"},
     {{0x22f1, bm2bp(0x20)}, "Also FE visited pre-thraxx or post-ww??"},
     {{0x22f1, bm2bp(0x40)}, "Inside outro?"},
-    {{0x22f2, bm2bp(0x01)}, "In creadits"},
+    {{0x22f2, bm2bp(0x01)}, "In credits"},
     {{0x22f2, bm2bp(0x02)}, "Swamp leafpad activated"},
     {{0x22f2, bm2bp(0x40)}, "Horace met past aegis/ww?"},
     {{0x22f2, bm2bp(0x80)}, "Palace guard alt. dialog/easter egg"},
