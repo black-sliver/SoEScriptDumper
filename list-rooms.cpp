@@ -578,6 +578,7 @@ std::list< std::pair<uint32_t, const char*> > absscripts = {
     {0x92cd97, "Nobilia market - no trade with dog"},
     {0x96ad2a, "Nobilia market - prophet easter egg dialog"},
     {0x938369, "Prehistoria - planetfall"},
+    {0x9a848d, "Gothica - The Show of Life"},
 };
 static
 #ifndef AUTO_DISCOVER_SCRIPTS
