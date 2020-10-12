@@ -10,11 +10,11 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: default build
-      run: g++ list-rooms.cpp -o soe-script-dumper
+      run: g++ -Wall -Werror list-rooms.cpp -o soe-script-dumper
     - name: HTML5 build
-      run: g++ -DHTML5 list-rooms.cpp -o soe-script-dumper
+      run: g++ -Wall -Werror -DHTML5 list-rooms.cpp -o soe-script-dumper
     - name: HTML4 build
-      run: g++ -DHTML4 list-rooms.cpp -o soe-script-dumper
+      run: g++ -Wall -Werror -DHTML4 list-rooms.cpp -o soe-script-dumper
 
   build-windows:
 
@@ -24,4 +24,4 @@ jobs:
     - uses: actions/checkout@v1
     - uses: ilammy/msvc-dev-cmd@v1
     - name: build (default)
-      run: cl.exe /EHsc list-rooms.cpp /out:soe-script-dumper.exe
+      run: cl.exe /EHsc /WX list-rooms.cpp /out:soe-script-dumper.exe
