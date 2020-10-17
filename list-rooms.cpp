@@ -74,7 +74,6 @@ or add points of interest by hand to ..scripts lists.
 #define SHOW_STEP_ON_SCRIPTS
 #define SHOW_B_TRIGGER_SCRIPTS
 #define SHOW_ABS_ADDR
-#define INCLUDE_UNKNOWN_MAPS // try all map ids
 // NOTE: sniff, gourds and doggo is untested in latest version
 //#define PRINT_ALL_SNIFF_SPOTS // requires SHOW_B_TRIGGER_SCRIPTS
 //#define DUMP_ALL_SNIFF_SPOTS // generate sniff.h for evermizer
@@ -214,13 +213,12 @@ static std::list<char*> strings; // buffer for generated strings
 // NOTE: unique_ptr syntax is too ugly for me to handle
 #endif
 
+#define MAX_MAPS 127
+
 // NOTE: we use a list to have ordering we want
 static 
-#ifndef INCLUDE_UNKNOWN_MAPS
-const
-#endif
+
 std::list< std::pair<uint8_t, const char*> > maps = {
-    // TODO: get map names from ROM
     {0x38, "Prehistoria - South jungle / Start"},
     {0x33, "Prehistoria - Strong Heart's Exterior"},
     {0x34, "Prehistoria - Strong Heart's Hut"},
@@ -3839,33 +3837,31 @@ int main(int argc, char** argv)
     printf("%s", START);
     printf("Map script adresses are located at 0x%06x\n", mapscriptptr);
     printf("Global/callable script adresses at 0x%06x\n", globalscriptptr);
-    
-#ifdef INCLUDE_UNKNOWN_MAPS
-    uint32_t max_mapid = 0;
-    for (const auto& pair: maps) {
-        if (pair.first>max_mapid) max_mapid = pair.first;
-    }
-    for (const auto& pair: maps) {
-        if (pair.first==max_mapid) {
-            printf("Last map is 0x%02x: %s\n", pair.first, pair.second);
-            break;
-        }
-    }
-    max_mapid |= 0x0f;
-    printf("Adding unknown map IDs up to 0x%02x\n", max_mapid);
-    for (unsigned i=0; i<=max_mapid; i++) {
-        if (read24(MAP_LIST + (i<<2)) > 0xafffff) continue; // invalid data pointer
-        bool match = false;
-        for (const auto& pair: maps) {
-            if (pair.first==(uint8_t)i) {
-                match = true;
-                break;
+
+    // use map names from ROM as fallback
+    char *map_addr = (char *)&buf[0x2C8000] + 2; // always skip 'm.'
+    char *max_map_addr = (char *)&buf[len];
+    size_t mlen = 0;
+    uint8_t map_id = 0;
+    while ((map_addr+mlen < max_map_addr) && (map_id<=MAX_MAPS)) {
+        // map name string is complete, store it
+        if (map_addr[mlen] == 0) {
+            bool match = false;
+            for (const auto& pair: maps) {
+                if (pair.first==map_id) {
+                    match = true;
+                    break;
+                }
             }
+            if (!match)
+                maps.push_back(std::make_pair(map_id, strdup(map_addr)));
+            
+            map_addr+=mlen+1+2; // always skip 'm.'
+            mlen = 0;
+            map_id++;
         }
-        // TODO: get name from ROM
-        if (!match) maps.push_back(std::make_pair((uint8_t)i, "Unknown"));
+        mlen++;
     }
-#endif
     
     for (auto& pair: maps) {
         uint16_t offset = ((uint16_t)pair.first) << 2;
