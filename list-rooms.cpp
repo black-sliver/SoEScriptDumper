@@ -3843,7 +3843,7 @@ int main(int argc, char** argv)
     char *max_map_addr = (char *)&buf[len];
     size_t mlen = 0;
     uint8_t map_id = 0;
-    while ((map_addr+mlen < max_map_addr) && (map_id<=MAX_MAPS)) {
+    while ((map_addr+mlen < max_map_addr) && (map_id<MAX_MAPS)) {
         // map name string is complete, store it
         if (map_addr[mlen] == 0) {
             bool match = false;
