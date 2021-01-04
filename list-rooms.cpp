@@ -46,7 +46,7 @@ or add points of interest by hand to ..scripts lists.
 #include <string.h>
 #include <stdint.h>
 #include <list>
-#include <algorithm> // std::min_element, std::max_element
+#include <algorithm> // std::min_element, std::max_element, std::find
 #include <map>
 #include <stack>
 #include <assert.h>
@@ -91,6 +91,7 @@ or add points of interest by hand to ..scripts lists.
 //#define PRINT_HEX // add hex dump to output
 #define INLINE_RCALLS // prints out RCALLED code as part of script
 #define AUTO_DISCOVER_SCRIPTS
+//#define SHOW_UNUSED_SCRIPT_IDS
 //#define HYPERLINKS
 
 // test compiler feature
@@ -739,6 +740,10 @@ std::list< std::pair<uint16_t, const char*> > npcscripts = {
     {0x040e, "Desert of Doom - wrap player West"},
     {0x03f9, "Desert of Doom - wrap player East"},
 };
+#ifdef SHOW_UNUSED_SCRIPT_IDS
+static std::list<uint16_t> used_globalscripts;
+static std::list<uint16_t> used_npcscripts;
+#endif
 static
 #ifndef AUTO_DISCOVER_SCRIPTS
 const
@@ -2695,6 +2700,9 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                 std::string entity = parse_sub(scriptaddr,&ok);
                 val16 = read16(scriptaddr); scriptaddr+=2;
                 if (ok) {
+#ifdef SHOW_UNUSED_SCRIPT_IDS
+                    used_npcscripts.push_back(val16);
+#endif
 #ifdef AUTO_DISCOVER_SCRIPTS
                     bool exists = false;
                     for (const auto& s:npcscripts) if (s.first == val16) { exists=true; break; }
@@ -2719,6 +2727,9 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     // looks like a different code path for non-pointers // TODO: RETRACE!
                     unsigned val1 = (unsigned)read16(scriptaddr); scriptaddr+=2;
                     unsigned val2 = (unsigned)read16(scriptaddr); scriptaddr+=2;
+#ifdef SHOW_UNUSED_SCRIPT_IDS
+                    used_npcscripts.push_back(val2);
+#endif
 #ifdef AUTO_DISCOVER_SCRIPTS
                     // TODO: see what type actually means and name script accordingly
                     bool exists = false;
@@ -2739,6 +2750,9 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     if (ok) {
                         unsigned val1 = (unsigned)read16(scriptaddr); scriptaddr+=2;
                         unsigned val2 = (unsigned)read16(scriptaddr); scriptaddr+=2;
+#ifdef SHOW_UNUSED_SCRIPT_IDS
+                    used_npcscripts.push_back(val2);
+#endif
 #ifdef AUTO_DISCOVER_SCRIPTS
                         bool exists = false;
                         for (const auto& s:npcscripts) if (s.first == val2) { exists=true; break; }
@@ -3422,6 +3436,9 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
             case CALL_SUB: // 0xa3, call sub script
             {
                 type = read8(scriptaddr++);
+#ifdef SHOW_UNUSED_SCRIPT_IDS
+                 used_globalscripts.push_back(type);
+#endif
 #ifdef AUTO_DISCOVER_SCRIPTS
                 bool exists = false;
                 for (const auto& s:globalscripts) if (s.first == type) { exists=true; break; }
@@ -3447,6 +3464,9 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
             case CALL_16BIT: // 0xa4, some call instr with 16bit addr
             {
                 val16 = read16(scriptaddr); scriptaddr+=2;
+#ifdef SHOW_UNUSED_SCRIPT_IDS
+                 used_npcscripts.push_back(val16);
+#endif
 #ifdef AUTO_DISCOVER_SCRIPTS
                 bool exists = false;
                 for (const auto& s:npcscripts) if (s.first == val16) { exists=true; break; }
@@ -3579,6 +3599,9 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                     uint32_t index=0; const char* scripttype; const char* name;
                     if (instr == 0xb0) { // 8bit global script call?
                         index = read8(scriptaddr++);
+#ifdef SHOW_UNUSED_SCRIPT_IDS
+                        used_globalscripts.push_back((uint8_t)index);
+#endif
 #ifdef AUTO_DISCOVER_SCRIPTS
                         bool exists = false;
                         for (const auto& s:globalscripts) if (s.first == index) { exists=true; break; }
@@ -3592,6 +3615,9 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                         scripttype = "Global (8bit)";
                     } else if (instr == 0xb1) { // 16bit npc script call?
                         index = read16(scriptaddr); scriptaddr+=2;
+#ifdef SHOW_UNUSED_SCRIPT_IDS
+                        used_npcscripts.push_back(index);
+#endif
 #ifdef AUTO_DISCOVER_SCRIPTS
                         bool exists = false;
                         for (const auto& s:npcscripts) if (s.first == index) { exists=true; break; }
@@ -3915,12 +3941,15 @@ int main(int argc, char** argv)
             total_rooms_with_mscripts++;
             for (uint16_t pos=0; pos<mscriptlistlen; pos+=6) {
                 total_mscripts++;
+                uint16_t scriptid = read16(mscriptlistptr + pos + 4);
+#ifdef SHOW_UNUSED_SCRIPT_IDS
+                used_npcscripts.push_back(scriptid);
+#endif
 #ifdef SHOW_STEP_ON_SCRIPTS
                 uint8_t y1 = read8(mscriptlistptr + pos + 0);
                 uint8_t x1 = read8(mscriptlistptr + pos + 1);
                 uint8_t y2 = read8(mscriptlistptr + pos + 2);
                 uint8_t x2 = read8(mscriptlistptr + pos + 3);
-                uint16_t scriptid = read16(mscriptlistptr + pos + 4);
                 uint32_t scriptaddr = script2romaddr(read24(mapscriptptr + scriptid));
                 printf("    [%02x,%02x:%02x,%02x] = (id:%x => (%x@%x) => addr:0x%06x)\n",
                     x1,y1, x2,y2, scriptid, 
@@ -3948,12 +3977,15 @@ int main(int argc, char** argv)
             total_rooms_with_bscripts++;
             for (uint16_t pos=0; pos<bscriptlistlen; pos+=6) {
                 total_bscripts++;
+                uint16_t scriptid = read16(bscriptlistptr + pos + 4);
+#ifdef SHOW_UNUSED_SCRIPT_IDS
+                used_npcscripts.push_back(scriptid);
+#endif
 #ifdef SHOW_B_TRIGGER_SCRIPTS
                 uint8_t y1 = read8(bscriptlistptr + pos + 0);
                 uint8_t x1 = read8(bscriptlistptr + pos + 1);
                 uint8_t y2 = read8(bscriptlistptr + pos + 2);
                 uint8_t x2 = read8(bscriptlistptr + pos + 3);
-                uint16_t scriptid = read16(bscriptlistptr + pos + 4);
                 uint32_t scriptaddr = script2romaddr(read24(mapscriptptr + scriptid));
                 printf("    [%02x,%02x:%02x,%02x] = (id:%x => (%x@%x) => addr:0x%06x)\n",
                     x1,y1, x2,y2, scriptid, 
@@ -4154,20 +4186,79 @@ for (auto a: {0xb1e000,0x95c50d,0x95cfaa,0x95cb9a,0x9895c8,0x97cdc3}) {
         fclose(f);
     }
 #endif
+#ifdef SHOW_UNUSED_SCRIPT_IDS
+    size_t unused_globalscripts=0;
+    size_t unused_npcscripts=0;
+    uint16_t min_globalscript=0x00; // 0x00 is known to be valid
+    uint16_t max_globalscript=0xff; // 0xff is known to be valid
+    uint16_t min_npcscript=0x0000; // 0x0000 is known to be valid
+    uint16_t max_npcscript=(uint16_t)(globalscriptptr-mapscriptptr-3); // this is known to be valid
+    for (auto scriptid: used_npcscripts) { // find min/max and map 16bit addr to 8bit addr
+        if (mapscriptptr + scriptid >= globalscriptptr && (scriptid-(globalscriptptr-mapscriptptr))/3<=0xff) {
+            // in global scripts section. mark global script as used.
+            used_globalscripts.push_back((scriptid-(globalscriptptr-mapscriptptr))/3); // 1B addressed called with 2B address
+        }
+        else if (scriptid>max_npcscript) max_npcscript = scriptid;
+    }
+
+    printf(HEADING HEADING_TEXT "Unused global scripts" HEADING_END NORMAL "\n");
+    for (uint16_t scriptid=min_globalscript; scriptid<=max_globalscript && scriptid<0xffff; scriptid++) {
+        if (std::find(used_globalscripts.begin(), used_globalscripts.end(), scriptid) == used_globalscripts.end()) {
+            uint32_t scriptaddr = script2romaddr(read24(globalscriptptr + 3*scriptid));
+            uint16_t shortscriptid = (globalscriptptr-mapscriptptr) + scriptid*3;
+            printf("%02x = short:%4x (0x%06x) => 0x%06x\n",
+                   scriptid, shortscriptid, globalscriptptr + 3*scriptid, scriptaddr);
+            if ((scriptaddr&(~0xc00000)) < len) {
+                printscript("      ", buf, scriptaddr, len);
+                printf("\n");
+            }
+            unused_globalscripts++;
+        }
+    }
+
+    printf(HEADING HEADING_TEXT "Unused short/npc/map scripts" HEADING_END NORMAL "\n");
+    for (uint16_t scriptid=min_npcscript; scriptid<=max_npcscript && scriptid<0xffff; scriptid+=3) {
+        if (mapscriptptr + scriptid >= globalscriptptr && (scriptid-(globalscriptptr-mapscriptptr))/3<=0xff) {
+            // in global scripts section. see loop above.
+            continue;
+        }
+        if (std::find(used_npcscripts.begin(), used_npcscripts.end(), scriptid) == used_npcscripts.end()) {
+            uint32_t scriptaddr = script2romaddr(read24(mapscriptptr + scriptid));
+            printf("%04x (0x%06x) => addr:0x%06x\n",
+                   scriptid, mapscriptptr + scriptid, scriptaddr);
+            if ((scriptaddr&(~0xc00000)) < len) {
+                printscript("      ", buf, scriptaddr, len);
+                printf("\n");
+            }
+            unused_npcscripts++;
+        }
+    }
+#endif
 
 #ifndef NO_STATS
-    printf("\n~ STATS ~\n");
+    printf("\n" HEADING HEADING_TEXT "~ STATS ~" HEADING_END NORMAL "\n");
     printf("Inspected scripts from ROM 0x%06x to 0x%06x\n", min_addr-0x800000, max_addr-0x800000);
     printf("For a total of %u instructions, hitting %u undecodable from\n"
            "     %u maps with %u step-on- and %u b-triggers,\n"
            "     %u global scripts,\n"
-           "     %u npc scripts and\n"
-           "     %u other scripts\n",
+           "     %u npc scripts,\n"
+           "     %u other scripts"
+#ifdef SHOW_UNUSED_SCRIPT_IDS
+           ",\n"
+           "     %u unused global scripts,\n"
+           "     %u unused npc scripts"
+#endif
+           "\n",
            instr_count, unknowninstrs,
            (unsigned)maps.size(),(unsigned)total_mscripts,(unsigned)total_bscripts,
            (unsigned)globalscripts.size(),
            (unsigned)npcscripts.size(),
-           (unsigned)absscripts.size());
+           (unsigned)absscripts.size()
+#ifdef SHOW_UNUSED_SCRIPT_IDS
+          ,(unsigned)unused_globalscripts,
+           (unsigned)unused_npcscripts
+#endif
+    );
     printf("With %u flags and %u RAM locations documented\n\n",
         (unsigned)flags.size(), (unsigned)ram.size());
 
