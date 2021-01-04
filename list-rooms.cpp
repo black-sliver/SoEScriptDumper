@@ -2716,16 +2716,16 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
             {
                 type = read8(scriptaddr++);
                 if (sub1bIsFinalVal(type)) { // x=positive nibble, - 1, << 1
-                    // looks like a different code path for non-pointers // TODO: RETRACE?
+                    // looks like a different code path for non-pointers // TODO: RETRACE!
                     unsigned val1 = (unsigned)read16(scriptaddr); scriptaddr+=2;
                     unsigned val2 = (unsigned)read16(scriptaddr); scriptaddr+=2;
 #ifdef AUTO_DISCOVER_SCRIPTS
                     // TODO: see what type actually means and name script accordingly
                     bool exists = false;
-                    for (const auto& s:npcscripts) if (s.first == val16) { exists=true; break; }
+                    for (const auto& s:npcscripts) if (s.first == val2) { exists=true; break; }
                     if (!exists) {
-                        strings.push_back(strdup(("Unnamed Short script " + u16val2str(val16)).c_str()));
-                        npcscripts.push_back(std::make_pair(val16, strings.back()));
+                        strings.push_back(strdup(("Unnamed Short script " + u16val2str(val2)).c_str()));
+                        npcscripts.push_back(std::make_pair(val2, strings.back()));
                     }
 #endif
                     printf("%s[" ADDRFMT "] (%02x) WRITE $0ea2+%x=0x%02x, $0eac+%x=0x%02x (unknown): %s?%s\n",
