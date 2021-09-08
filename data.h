@@ -11,11 +11,18 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+#include <list>
+#include <map>
+#include <stdint.h>
+#include <assert.h>
 
 // some constants for rom adresses
-#define MAP_LIST 0x9ffde7
+#define HIROM_HEADER_ADDR 0x00ffb0
+#define MAP_LIST_ADDR_US 0x9ffde7
+#define MAP_LIST_ADDR_DE 0xa0fde5
 #define MAX_MAPS 127
-#define SCRIPTS_START_ADDR 0x928000
+#define SCRIPTS_START_ADDR_US 0x928000
+#define SCRIPTS_START_ADDR_DE 0x938000
 
 // NOTE: we use a list to have ordering we want
 static 
@@ -157,6 +164,7 @@ std::list< std::pair<uint8_t, const char*> > maps = {
     {0x03, "Intro - Mansion Exterior 1995"},
 };
 
+// NOTE: addresses below are probably NTSC/US only
 static
 #ifndef AUTO_DISCOVER_SCRIPTS
 const
@@ -404,6 +412,8 @@ std::list< std::pair<uint32_t, const char*> > absscripts = {
     {0x938369, "Prehistoria - planetfall"},
     {0x9a848d, "Gothica - The Show of Life"},
 };
+
+// NOTE: some IDs below are possibly NTSC/US only
 static
 #ifndef AUTO_DISCOVER_SCRIPTS
 const
@@ -543,6 +553,7 @@ std::list< std::pair<uint16_t, const char*> > npcscripts = {
     {0x1b5a, "Boss rush loot script"},
 };
 
+// NOTE: some IDs below are possibly NTSC/US only
 static
 #ifndef AUTO_DISCOVER_SCRIPTS
 const

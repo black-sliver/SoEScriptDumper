@@ -212,6 +212,8 @@ static std::list<char*> strings; // buffer for generated strings
 #endif
 
 #include "data.h"
+uint32_t map_list_addr = MAP_LIST_ADDR_US;
+uint32_t scripts_start_addr = SCRIPTS_START_ADDR_US;
 
 #ifdef SHOW_UNUSED_SCRIPT_IDS
 static std::list<uint16_t> used_globalscripts;
@@ -394,13 +396,13 @@ static uint32_t read_buf24(const uint8_t* buf, uint32_t addr, size_t len)
 static inline uint32_t rom2scriptaddr(uint32_t romaddr)
 {
     romaddr &= ~(0x8000);
-    romaddr -= 0x920000;
+    romaddr -= (scripts_start_addr & ~(0x8000));
     return (romaddr&0x007fff) + ((romaddr&0x1ff0000)>>1);
 }
 
 static inline uint32_t script2romaddr(uint32_t scriptaddr)
 {
-    return 0x928000 + (scriptaddr&0x007fff) + ((scriptaddr&0xff8000)<<1);
+    return scripts_start_addr + (scriptaddr&0x007fff) + ((scriptaddr&0xff8000)<<1);
 }
 
 static bool sub1bIsVal(uint8_t subinstr)
@@ -2401,7 +2403,7 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                 //uint32_t mapscriptptr = 0x928000 + read16(0x928000);
                 printf("%s[" ADDRFMT "] (%02x) CALL 0x%04x -" GT " 0x%06x%s\n",
                     spaces, ADDR, instr, val16,
-                    script2romaddr(read24(0x928000 + read16(0x928000) + val16)), HD());
+                    script2romaddr(read24(scripts_start_addr + read16(scripts_start_addr) + val16)), HD());
                 break;
             }
             case CALL_8BIT_NEG: // 0xa5, looks like a call with a negative 8bit offset
@@ -2771,6 +2773,24 @@ int main(int argc, char** argv)
     if (fread(buf, 1, len, f) != len) die("Could not read input file!\n");
     fclose(f); f = nullptr;
     
+    if (read16(HIROM_HEADER_ADDR) == 0x3343 && read16(HIROM_HEADER_ADDR+2) == 0x4541 && read16(HIROM_HEADER_ADDR+4) == 0x454f) {
+        // US version
+        map_list_addr = MAP_LIST_ADDR_US;
+        scripts_start_addr = SCRIPTS_START_ADDR_US;
+    } else if (read16(HIROM_HEADER_ADDR) == 0x3130 && read16(HIROM_HEADER_ADDR+2) == 0x4541 && read16(HIROM_HEADER_ADDR+4) == 0x444f) {
+        // DE version
+        map_list_addr = MAP_LIST_ADDR_DE;
+        scripts_start_addr = SCRIPTS_START_ADDR_DE;
+    } else if (read16(HIROM_HEADER_ADDR) == 0x3130) {
+        // probably PAL version
+        map_list_addr = MAP_LIST_ADDR_DE;
+        scripts_start_addr = SCRIPTS_START_ADDR_DE;
+    } else {
+        // guessing NTSC version
+        map_list_addr = MAP_LIST_ADDR_US;
+        scripts_start_addr = SCRIPTS_START_ADDR_US;
+    }
+
     bool skip_scriptless = true; // TODO parse command line args, NOT --all
     (void)skip_scriptless; // remove warning, usage of this flag depends on defines
     size_t total_mscripts=0;
@@ -2780,8 +2800,8 @@ int main(int argc, char** argv)
     size_t total_rooms_with_bscripts=0;
     size_t total_invalid_script_sections=0;
     
-    uint32_t mapscriptptr = SCRIPTS_START_ADDR + read16(SCRIPTS_START_ADDR);
-    uint32_t globalscriptptr = SCRIPTS_START_ADDR + read16(SCRIPTS_START_ADDR) + read16(SCRIPTS_START_ADDR+8);
+    uint32_t mapscriptptr = scripts_start_addr+ read16(scripts_start_addr);
+    uint32_t globalscriptptr = scripts_start_addr + read16(scripts_start_addr) + read16(scripts_start_addr+8);
     
     printf("%s", START);
     printf("Map script adresses are located at 0x%06x\n", mapscriptptr);
@@ -2814,9 +2834,9 @@ int main(int argc, char** argv)
     
     for (auto& pair: maps) {
         uint16_t offset = ((uint16_t)pair.first) << 2;
-        uint32_t dataptr = read24(MAP_LIST + offset);
+        uint32_t dataptr = read24(map_list_addr + offset);
         if (dataptr > 0xafffff) {
-            printf(HEADING "[0x%02x] " HEADING_TEXT "%s" HEADING_END " at 0x%06x" NORMAL "\n", (unsigned)pair.first, pair.second, (unsigned)MAP_LIST + offset);
+            printf(HEADING "[0x%02x] " HEADING_TEXT "%s" HEADING_END " at 0x%06x" NORMAL "\n", (unsigned)pair.first, pair.second, (unsigned)map_list_addr + offset);
             printf("  " RED "data at 0x%06x does not exist" NORMAL "\n\n", (unsigned)dataptr);
             continue;
         }
@@ -2829,7 +2849,7 @@ int main(int argc, char** argv)
         if (!addr_valid(bscriptlistptr)) die("Unsupported ROM");
         uint16_t bscriptlistlen = read16(dataptr+0x0d+2+mscriptlistlen);
         // enter script
-        uint32_t escriptptr  = 0x92801b + 5UL * pair.first;
+        uint32_t escriptptr  = scripts_start_addr + 0x00001b + 5UL * pair.first;
         if (!addr_valid(escriptptr)) die("Unsupported ROM");
         uint32_t escriptaddr = script2romaddr(read24(escriptptr));
         
@@ -2838,7 +2858,7 @@ int main(int argc, char** argv)
         if (!bscriptlistlen && !mscriptlistlen && skip_scriptless) continue;
 #endif
         
-        printf(HEADING "[0x%02x] " HEADING_TEXT "%s" HEADING_END " at 0x%06x" NORMAL "\n", (unsigned)pair.first, pair.second, (unsigned)MAP_LIST + offset);
+        printf(HEADING "[0x%02x] " HEADING_TEXT "%s" HEADING_END " at 0x%06x" NORMAL "\n", (unsigned)pair.first, pair.second, (unsigned)map_list_addr + offset);
         printf("  data at 0x%06x\n", (unsigned)dataptr);
         
         printf("  enter script at 0x%06x => 0x%06x%s\n", (unsigned)escriptptr, (unsigned)escriptaddr,
