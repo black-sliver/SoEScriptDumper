@@ -2861,12 +2861,11 @@ int main(int argc, char** argv)
         printf(HEADING "[0x%02x] " HEADING_TEXT "%s" HEADING_END " at 0x%06x" NORMAL "\n", (unsigned)pair.first, pair.second, (unsigned)map_list_addr + offset);
         printf("  data at 0x%06x\n", (unsigned)dataptr);
         
-        printf("  enter script at 0x%06x => 0x%06x%s\n", (unsigned)escriptptr, (unsigned)escriptaddr,
 #ifdef SHOW_ENTER_SCRIPTS
-        "");
+        printf("  enter script at 0x%06x => 0x%06x\n", (unsigned)escriptptr, (unsigned)escriptaddr);
         printscript("      ", buf, escriptaddr, len, false, pair.first);
 #else
-        " omitted");
+        printf("  enter script at 0x%06x => 0x%06x omitted\n", (unsigned)escriptptr, (unsigned)escriptaddr);
 #endif
         
         printf("  step-on scripts at 0x%06x, len=0x%04x (%u entries)\n",
@@ -3185,23 +3184,20 @@ for (auto a: {0xb1e000,0x95c50d,0x95cfaa,0x95cb9a,0x9895c8,0x97cdc3}) {
            "     %u maps with %u step-on- and %u b-triggers,\n"
            "     %u global scripts,\n"
            "     %u npc scripts,\n"
-           "     %u other scripts"
-#ifdef SHOW_UNUSED_SCRIPT_IDS
-           ",\n"
-           "     %u unused global scripts,\n"
-           "     %u unused npc scripts"
-#endif
-           "\n",
+           "     %u other scripts",
            instr_count, unknowninstrs,
            (unsigned)maps.size(),(unsigned)total_mscripts,(unsigned)total_bscripts,
            (unsigned)globalscripts.size(),
            (unsigned)npcscripts.size(),
-           (unsigned)absscripts.size()
+           (unsigned)absscripts.size());
 #ifdef SHOW_UNUSED_SCRIPT_IDS
-          ,(unsigned)unused_globalscripts,
-           (unsigned)unused_npcscripts
+    printf(",\n"
+           "     %u unused global scripts,\n"
+           "     %u unused npc scripts",
+           (unsigned)unused_globalscripts,
+           (unsigned)unused_npcscripts);
 #endif
-    );
+    printf("\n");
     printf("With %u flags and %u RAM locations documented\n\n",
         (unsigned)flags.size(), (unsigned)ram.size());
 
