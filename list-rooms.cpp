@@ -722,7 +722,7 @@ static std::string buf_parse_sub(const uint8_t* buf, uint32_t& addr, size_t len,
             case 0x0a: // test temp bit
             {
                 uint16_t baseaddr = (instr>=0x0a) ? 0x2834 : 0x2258;
-                uint8_t a = read16(addr)>>3;
+                uint16_t a = read16(addr)>>3;
                 uint8_t b = read16(addr)&0x07;
                 addr+=2;
                 res += u16addr2str(baseaddr+a) + "&" + u8val2str(1<<b); // TODO: named bits
