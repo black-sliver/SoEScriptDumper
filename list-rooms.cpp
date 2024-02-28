@@ -77,7 +77,8 @@ or add points of interest by hand to ..scripts lists.
 // NOTE: sniff, gourds and doggo is untested in latest version
 //#define PRINT_ALL_SNIFF_SPOTS // requires SHOW_B_TRIGGER_SCRIPTS
 //#define DUMP_ALL_SNIFF_SPOTS // generate sniff.h for evermizer
-//#define DUMP_ALL_SNIFF_FLAGS // generate sniffflags.h for list-rooms
+//#define DUMP_ALL_SNIFF_SPOTS_JSON // generate sniff.json for cyb3r
+//#define DUMP_ALL_SNIFF_FLAGS // generate sniffflags.inc for list-rooms
 //#define PRINT_ALL_GOURDS // requires SHOW_B_TRIGGER_SCRIPTS
 //#define DUMP_ALL_GOURDS // this is not implemented because act3 gourds suck
 //#define DUMP_ALL_GOURD_FLAGS // as above
@@ -221,6 +222,23 @@ static std::list<uint16_t> used_npcscripts;
 #endif
 
 
+static const char* get_map_name(uint8_t map_id, bool include_act = true)
+{
+    const char* s = nullptr;
+    for (auto pair: maps) {
+        if (pair.first == map_id) {
+            s = pair.second;
+            if (include_act)
+                break;
+            const char* tmp = strstr(s, "- ");
+            if (tmp)
+                s = tmp + 2;
+            break;
+        }
+    }
+    return s;
+}
+
 
 enum class IntType : uint8_t { none=0, word, byte, subinstr1B, subinstr2B, subinstr3B };
 
@@ -314,16 +332,10 @@ std::string LootData::to_flag() const {
     char buf[256];
     char sitem[32]; snprintf(sitem, sizeof(sitem), "0x%04x ", item);
     char umap[16]; snprintf(umap, sizeof(umap), "MAP 0x%02x", mapid);
-    const char* smap = umap;
-    
-    for (auto pair: maps) {
-        if (pair.first == mapid) {
-            smap = pair.second;
-            const char* tmp = strstr(smap, "- ");
-            if (tmp) smap = tmp+2;
-            break;
-        }
-    }
+
+    const char* smap = get_map_name(mapid, false);
+    if (!smap)
+        smap = umap;
     
     const auto& prizeit = prizes.find(item);
     if (prizeit != prizes.end()) {
@@ -343,8 +355,6 @@ std::string LootData::to_h() const {
     snprintf(buf, sizeof(buf), "{0x%06x, 0x%04x},", item_pos&~0xc00000, item);
     return std::string(buf);
 }
-
-
 
 static inline bool addr_valid(uint32_t addr, size_t len)
 {
@@ -3063,13 +3073,59 @@ for (auto a: {0xb1e000,0x95c50d,0x95cfaa,0x95cb9a,0x9895c8,0x97cdc3}) {
         fprintf(f, "struct sniff { uint32_t addr; uint16_t val; };\n");
         fprintf(f, "static const struct sniff sniffs[] = {");
         size_t n=0;
+        uint8_t last_map_id = (uint8_t)-1;
         for (const auto& sniff: sniffs) {
-            if (n++%3 == 0)
+            bool map_changed = sniff.mapid != last_map_id;
+            if (map_changed) {
+                const char* map_name = get_map_name(sniff.mapid);
+                fprintf(f, "\n    // 0x%02hhx: %s\n    %s", sniff.mapid, map_name ? map_name : "Unknown", sniff.to_h().c_str());
+                n = 1;
+                last_map_id = sniff.mapid;
+            } else if (n++ % 3 == 0) {
                 fprintf(f, "\n    %s", sniff.to_h().c_str());
-            else
+            } else {
                 fprintf(f, " %s", sniff.to_h().c_str());
+            }
         }
         fprintf(f, "\n};\n");
+        fclose(f);
+    }
+#endif
+#ifdef DUMP_ALL_SNIFF_SPOTS_JSON
+    {
+        FILE* f = fopen("sniff.jsonc", "wb");
+        fprintf(f, "[\n");
+        uint8_t last_map_id = (uint8_t)-1;
+        bool first = true;
+        for (const auto& sniff: sniffs) {
+            bool map_changed = sniff.mapid != last_map_id;
+            if (!first) {
+                fprintf(f, ",\n");
+            }
+            if (map_changed) {
+                const char* map_name = get_map_name(sniff.mapid);
+                fprintf(f, "// 0x%02hhx: %s\n", sniff.mapid, map_name ? map_name : "Unknown");
+            }
+            fprintf(f, "{\n"
+                       "    \"map\": %hhu,\n"
+                       "    \"x1\": %hhu,\n"
+                       "    \"x2\": %hhu,\n"
+                       "    \"y1\": %hhu,\n"
+                       "    \"y2\": %hhu,\n"
+                       "    \"item\": %hu,\n"
+                       "    \"address\": %hu,\n"
+                       "    \"bit\": %hhu\n"
+                       "}",
+                    sniff.mapid,
+                    sniff.x1, sniff.x2, sniff.y1, sniff.y2,
+                    sniff.item,
+                    sniff.check_flag.first,
+                    sniff.check_flag.second
+                    );
+            first = false;
+            last_map_id = sniff.mapid;
+        }
+        fprintf(f, "\n]\n");
         fclose(f);
     }
 #endif
