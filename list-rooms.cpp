@@ -1153,10 +1153,9 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
             }
             case BRANCH_IF:     // 0x08
                 bool condition;
-                condition = true;
                 // fall through
             case BRANCH_IF_NOT: // 0x09
-                condition = false;
+                condition = (instr == BRANCH_IF);
                 // NOTE: this uses sub-instruction chaining, msbit in sub-instr set means last sub-instr
                 //       we need to have special cases for sniff, gourds and doggo lists at the moment
                 // TODO: reduce special cases to a minimum (unified parse_subinstr() is at the end)
