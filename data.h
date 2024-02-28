@@ -170,6 +170,7 @@ static
 const
 #endif
 std::list< std::pair<uint32_t, const char*> > absscripts = {
+    {0x92de49, "Intro-ingame transition script"},
     {0x99ebe2, "Vigor enter part [2] / script / animation"},
     {0x99ebd5, "Vigor applause?"},
     {0x99eb67, "Vigor script pt 3?"},
@@ -314,8 +315,8 @@ std::list< std::pair<uint32_t, const char*> > absscripts = {
     {0xb08018, "Select @Corrosion"},
     {0xb08030, "Select @Double Drain"},
     {0xb08036, "Select @Drain"},
-#endif
     {0xb0800c, "Select @Barrier"},
+#endif
     {0x94cd21, "FE Village call outro"},
     {0x94ca42, "FE Village actual outro"},
     {0x94cd25, "FE Village credits"},
@@ -324,11 +325,12 @@ std::list< std::pair<uint32_t, const char*> > absscripts = {
 #ifdef RANDO
     {0x97c144, "Randomizer Vigor fix"},
     {0x95d9e5, "Randomizer Sacred dog cutscene"}, // part of Sacred dog cutscene in vanilla
-#endif
     {0xb08070, "Rando Jukebox 1"},
     {0xb08079, "Rando Jukebox 2"},
     {0xb08084, "Rando Jukebox 3"},
     {0xb08091, "Rando Jukebox impl"},
+    {0xbd8000, "Rando remote item"},
+#endif
     {0x95b945, "East of Crustacia Rock landing"},
     {0x95baaa, "East of Crustacia Enter Part 2"},
     {0x94de7d, "Blimp (in Hut) Part"},
