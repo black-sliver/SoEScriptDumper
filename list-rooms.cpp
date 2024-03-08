@@ -3113,13 +3113,15 @@ for (auto a: {0xb1e000,0x95c50d,0x95cfaa,0x95cb9a,0x9895c8,0x97cdc3}) {
                        "    \"y2\": %hhu,\n"
                        "    \"item\": %hu,\n"
                        "    \"address\": %hu,\n"
-                       "    \"bit\": %hhu\n"
+                       "    \"bit\": %hhu,\n"
+                       "    \"script\": %u\n"
                        "}",
                     sniff.mapid,
                     sniff.x1, sniff.x2, sniff.y1, sniff.y2,
                     sniff.item,
                     sniff.check_flag.first,
-                    sniff.check_flag.second
+                    sniff.check_flag.second,
+                    sniff.scriptid
                     );
             first = false;
             last_map_id = sniff.mapid;
