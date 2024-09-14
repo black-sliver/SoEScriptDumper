@@ -3157,6 +3157,7 @@ for (auto a: {0xb1e000,0x95c50d,0x95cfaa,0x95cb9a,0x9895c8,0x97cdc3}) {
         FILE* f = fopen("doggo.h", "wb");
         fprintf(f, "//TODO:  we should also swap animations based on what doggo we have\n");
         fprintf(f, "//FIXME: $2363 is used to dynamically load doggo, but rarely used\n");
+        fprintf(f, "#include <stdint.h>\n");
         fprintf(f, "enum doggo_consts { DOGGO_ACT0=0xba, DOGGO_ACT1=0xb2, DOGGO_ACT2=0xb6,\n"
                    "                    DOGGO_ACT3=0xb8, DOGGO_ACT4=0xbc, DOGGO_BONE=0xb4 };\n");
         fprintf(f, "static const uint8_t doggo_vals[] = {\n"
