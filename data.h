@@ -322,6 +322,9 @@ std::list< std::pair<uint32_t, const char*> > absscripts = {
     {0x94cd25, "FE Village credits"},
     {0x95d9dd, "Sacred dog cutscene"},
     {0x92cc6c, "Unknown script in square"},
+    {0x98e963, "Ebon Keep throne room outro"},
+    {0x98eb25, "Ebon Keep throne room credits"},
+    {0x98ebe0, "Ebon Keep throne room cutscene"},
 #ifdef RANDO
     {0x97c144, "Randomizer Vigor fix"},
     {0x95d9e5, "Randomizer Sacred dog cutscene"}, // part of Sacred dog cutscene in vanilla
