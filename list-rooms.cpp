@@ -267,6 +267,8 @@ struct LootData {
     IntType extra_type=IntType::none;
     std::pair<uint16_t, uint8_t> check_flag={0,0};
     std::pair<uint16_t, uint8_t> set_flag={0,0};
+    uint32_t item_instr_pos=0;
+    uint8_t item_instr_len=0;
     uint8_t mapid=0;
     uint16_t scriptid=0;
     uint8_t x1=0;
@@ -1357,6 +1359,8 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                 printwrite(spaces, scriptstart, instroff, instr, addr, val16, HD());
                 if (addr == 0x2391) {  // item
                     loot.item = val16;
+                    loot.item_instr_pos = scriptstart+instroff;
+                    loot.item_instr_len = (uint8_t)(scriptaddr-loot.item_instr_pos);
                     loot.item_pos = scriptstart+instroff+3; // instr,addrhi:lo,val
                     loot.item_type = IntType::word;
                     loot.dataset |= LootData::DataSet::item;
@@ -1447,6 +1451,8 @@ static void printscript(const char* spaces, const uint8_t* buf, uint32_t scripta
                                                 IntType::none;
                 if (addr == 0x2391) {  // item
                     loot.item = val16;
+                    loot.item_instr_pos = scriptstart+instroff;
+                    loot.item_instr_len = (uint8_t)(scriptaddr-loot.item_instr_pos);
                     loot.item_pos = _pos;
                     loot.item_type = _inttype;
                     loot.dataset |= LootData::DataSet::item;
@@ -3114,14 +3120,20 @@ for (auto a: {0xb1e000,0x95c50d,0x95cfaa,0x95cb9a,0x9895c8,0x97cdc3}) {
                        "    \"item\": %hu,\n"
                        "    \"address\": %hu,\n"
                        "    \"bit\": %hhu,\n"
-                       "    \"script\": %u\n"
+                       "    \"mapref\": %hu,\n"
+                       "    \"script\": %u,\n"
+                       "    \"item_instr\": [%u, %hhu],\n"
+                       "    \"item_addr\": [%u, \"%s\"]\n"
                        "}",
                     sniff.mapid,
                     sniff.x1, sniff.x2, sniff.y1, sniff.y2,
                     sniff.item,
                     sniff.check_flag.first,
                     sniff.check_flag.second,
-                    sniff.scriptid
+                    sniff.mapref,
+                    sniff.scriptid,
+                    sniff.item_instr_pos, sniff.item_instr_len,
+                    sniff.item_pos, ::to_string(sniff.item_type)
                     );
             first = false;
             last_map_id = sniff.mapid;
