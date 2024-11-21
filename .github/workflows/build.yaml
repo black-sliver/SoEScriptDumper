@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build
-      run: g++ -std=c++11 -Wall -Werror -DPRINT_${{ matrix.print }} -D${{ matrix.out_format }} list-rooms.cpp -o soe-script-dumper
+      run: g++ -std=c++11 -Wall -Wno-unused-function -Werror -DPRINT_${{ matrix.print }} -D${{ matrix.out_format }} list-rooms.cpp -o soe-script-dumper
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
