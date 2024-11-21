@@ -3,25 +3,43 @@ name: C/C++ CI
 on: [push,pull_request]
 
 jobs:
-  build-ubuntu:
+  build-any:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-13]
+        out_format: [ANSI, HTML5]
+        print: [DEFAULT, ALL_SCRIPTS]
 
-    runs-on: ubuntu-latest
-    
+    runs-on: ${{ matrix.os }}
+
     steps:
     - uses: actions/checkout@v4
-    - name: default build
-      run: g++ -Wall -Werror list-rooms.cpp -o soe-script-dumper
-    - name: HTML5 build
-      run: g++ -Wall -Werror -DHTML5 list-rooms.cpp -o soe-script-dumper
-    - name: HTML4 build
-      run: g++ -Wall -Werror -DHTML4 list-rooms.cpp -o soe-script-dumper
+    - name: Build
+      run: g++ -Wall -Werror -DPRINT_${{ matrix.print }} -D${{ matrix.out_format }} list-rooms.cpp -o soe-script-dumper
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: soe-script-dumper_${{ matrix.os }}_${{ matrix.print }}_${{ matrix.out_format }}
+        path: soe-script-dumper
+        if-no-files-found: error
 
   build-windows:
+    strategy:
+      matrix:
+        os: [windows-latest]
+        out_format: [ANSI, HTML5]
+        print: [DEFAULT, ALL_SCRIPTS]
 
-    runs-on: windows-latest
-    
+    runs-on: ${{ matrix.os }}
+
     steps:
     - uses: actions/checkout@v4
     - uses: ilammy/msvc-dev-cmd@v1
-    - name: build (default)
-      run: cl.exe /EHsc /WX list-rooms.cpp /out:soe-script-dumper.exe
+    - name: Build (Windows)
+      run: cl.exe /DPRINT_${{ matrix.print }} /D${{ matrix.out_format }} /EHsc /WX list-rooms.cpp /out:soe-script-dumper.exe
+    - name: Upload (Windows)
+      uses: actions/upload-artifact@v4
+      with:
+        name: soe-script-dumper_${{ matrix.os }}_${{ matrix.print }}_${{ matrix.out_format }}
+        path: soe-script-dumper.exe
+        if-no-files-found: error
