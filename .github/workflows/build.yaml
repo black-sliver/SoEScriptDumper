@@ -36,7 +36,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: ilammy/msvc-dev-cmd@v1
     - name: Build (Windows)
-      run: cl.exe /DPRINT_${{ matrix.print }} /D${{ matrix.out_format }} /EHsc /WX list-rooms.cpp /out:soe-script-dumper.exe
+      run: cl.exe /DPRINT_${{ matrix.print }} /D${{ matrix.out_format }} /EHsc /WX list-rooms.cpp /link /out:soe-script-dumper.exe
     - name: Upload (Windows)
       uses: actions/upload-artifact@v4
       with:
