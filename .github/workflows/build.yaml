@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v4
     - name: default build
       run: g++ -Wall -Werror list-rooms.cpp -o soe-script-dumper
     - name: HTML5 build
@@ -21,7 +21,7 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v4
     - uses: ilammy/msvc-dev-cmd@v1
     - name: build (default)
       run: cl.exe /EHsc /WX list-rooms.cpp /out:soe-script-dumper.exe
